@@ -3,6 +3,9 @@
   "extends": [
         "eslint:recommended"
   ],
+  "plugins": [
+        "html"
+  ],
   "env": {
     "browser": true,
     "es6": true
