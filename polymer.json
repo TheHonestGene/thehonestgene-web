@@ -1,0 +1,19 @@
+{
+  "entrypoint": "index.html",
+  "shell": "src/thg-app.html",
+  "fragments": [
+    "src/thg-view404.html",
+    "src/thg-start.html",
+    "src/thg-genotype.html"
+  ],
+  "sourceGlobs": [
+   "src/**/*",
+   "images/**/*",
+   "scripts/**/*",
+   "bower.json"
+  ],
+  "includeDependencies": [
+    "manifest.json",
+    "bower_components/webcomponentsjs/webcomponents-lite.min.js"
+  ]
+}

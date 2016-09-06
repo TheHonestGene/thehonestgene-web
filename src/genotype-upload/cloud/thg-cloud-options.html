@@ -1,0 +1,149 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../../bower_components/neon-animation/neon-shared-element-animatable-behavior.html">
+<link rel="import" href="../../../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../../../bower_components/paper-material/paper-material.html">
+<link rel="import" href="../../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../../bower_components/neon-animation/animations/hero-animation.html">
+<link rel="import" href="../../../bower_components/neon-animation/animations/scale-up-animation.html">
+<link rel="import" href="../../../bower_components/neon-animation/animations/scale-down-animation.html">
+<link rel="import" href="../../../bower_components/neon-animation/animations/cascaded-animation.html">
+<link rel="import" href="thg-cloud-provider-card.html">
+
+<dom-module id="thg-cloud-options">
+    <style include="shared-styles">
+        :host {
+        }
+
+
+        .providers {
+            @apply(--layout-center);
+            @apply(--layout-around-justified);
+            @apply(--layout-horizontal);
+            @apply(--layout-wrap);
+        }
+
+        thg-cloud-provider {
+            cursor: pointer;
+        }
+    </style>
+    <template>
+        <paper-material elevation="1" class="infocard" id="infocard">
+            <div class="step">
+                <img src="/images/dna-icon.png">
+            </div>
+            <div class="description">
+                <h2>Cloud Upload</h2>
+                <p>The Cloud upload provides a convenient way of accessing genetic data directly from a third-party company. By clicking on one of the cloud providers below, a pop-up window will open allowing the users to authenticate themselves and provide permissions to TheHonestGene to access their genetic data.</p>
+                <div class="controls">
+                    <paper-button on-tap="_close">
+                        <iron-icon class="big" icon="arrow-back"></iron-icon> Back</paper-button>
+                </div>
+            </div>
+        </paper-material>
+        <section class="providers">
+            <template is="dom-repeat" items="{{providers}}" on-dom-change="_providersChanged" sort="_sortProviders">
+               <thg-cloud-provider-card class="provider" logo-url="{{item.logoUrl}}" on-tap="_onTapProvider"></thg-cloud-provider-card>
+            </template>
+         </section>
+    </template>
+    <script>
+        (function() {
+      'use strict';
+
+      Polymer({
+        is: 'thg-cloud-options',
+
+        behaviors: [
+          Polymer.NeonSharedElementAnimatableBehavior
+        ],
+        properties: {
+          sharedElements: {
+            value: function() {
+              return {
+                'hero': this.$.infocard,
+              };
+            },
+          },
+          animationConfig: {
+            value: function() {
+              return {
+                'entry': [{
+                  name: 'hero-animation',
+                  id: 'hero',
+                  toPage: this
+                },
+                {
+                  name: 'cascaded-animation',
+                  animation: 'transform-animation',
+                  transformFrom: 'translateY(60vh)',
+                  timing: {delay: 100}
+                },
+                {
+                    name: 'scale-up-animation',
+                    node: this.$.infocard,
+                }
+                ],
+                'exit': [{
+                  name: 'hero-animation',
+                  id: 'hero',
+                  fromPage: this,
+                },
+                {
+                  name: 'cascaded-animation',
+                  animation: 'transform-animation',
+                  transformTo: 'translateY(60vh)',
+                },
+                {
+                    name: 'scale-down-animation',
+                    node: this.$.infocard,
+                }
+                ],
+              };
+            }
+          },
+          providers: {
+            type: Array,
+            value: function() {
+                return []
+            },
+          },
+        },
+        ready: function() {
+
+        },
+        _sortProviders: function(prov1,prov2) {
+           if (prov1.name  === '23andMe') {
+               return -1;
+           }
+           if (prov2.name === '23andMe') {
+               return 1;
+           }
+           return 0;
+        },
+        _providersChanged: function() {
+          var providers = Polymer.dom(this.root).querySelectorAll('thg-cloud-provider-card');
+          var providersArray = Array.prototype.slice.call(providers);
+          this.animationConfig.exit[1].nodes = providersArray;
+          this.animationConfig.entry[1].nodes = providersArray;
+        },
+        _onTapProvider: function(e) {
+            let elem = event.currentTarget;
+            let providersArray =  Array.prototype.slice.call(Polymer.dom(this.root).querySelectorAll('thg-cloud-provider-card'));
+            let index = providersArray.indexOf(elem);
+            if (index > -1) {
+                providersArray.splice(index,1);
+                this.animationConfig.exit[1].nodes = providersArray;
+                this.animationConfig.entry[1].nodes = providersArray;
+            }
+            this.sharedElements.hero = elem;
+            this.fire('select-provider',e.model.item);
+        },
+        _close: function() {
+          this._providersChanged();
+          this.sharedElements.hero = this.$.infocard;
+          this.fire('close-options');
+        },
+      });
+    })();
+    </script>
+</dom-module>

@@ -1,0 +1,199 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-styles/color.html">
+<link rel="import" href="../bower_components/app-layout/app-scroll-effects/app-scroll-effects.html">
+<link rel="import" href="../bower_components/app-layout/app-header/app-header.html">
+<link rel="import" href="../bower_components/app-layout/app-header-layout/app-header-layout.html">
+<link rel="import" href="../bower_components/app-layout/app-toolbar/app-toolbar.html">
+<link rel="import" href="../bower_components/neon-animation/animations/fade-out-animation.html">
+<link rel="import" href="../bower_components/neon-animation/animations/scale-up-animation.html">
+<link rel="import" href="../bower_components/neon-animation/animations/scale-down-animation.html">
+<link rel="import" href="../bower_components/paper-toast/paper-toast.html">
+<link rel="import" href="../bower_components/timeu-wizard/timeu-wizard.html">
+<link rel="import" href="../bower_components/neon-animation/neon-animated-pages.html">
+<link rel="import" href="../bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="polymer-redux-store.html">
+<link rel="import" href="thg-start.html">
+<link rel="import" href="thg-view404.html">
+<link rel="import" href="thg-router.html">
+<link rel="import" href="thg-genotype.html">
+
+<dom-module id="thg-app">
+  <template>
+    <style>
+      :host {
+        --app-primary-color: var(--paper-blue-500);
+        --app-secondary-color: black;
+
+        display: block;
+      }
+      app-toolbar {
+        background-color: var(--app-primary-color);
+        color:white;
+      }
+      timeu-wizard {
+        padding: 20px;
+      }
+      .content {
+        max-width: 1280px;
+        margin: 5px auto;
+        padding: 10px;
+        @apply(--layout-vertical);
+        @apply(--layout-flex);
+        height:100%;
+      }
+      .main {
+        height:100%;
+      }
+
+      #pages {
+        @apply(--layout-vertical);
+        @apply(--layout-flex);
+      }
+
+    </style>
+
+    <thg-router></thg-router>
+    <app-header-layout fullbleed>
+      <app-header condenses reveals effects="waterfall">
+        <app-toolbar >
+          <div spacer main-title>TheHonestGene (BETA)</div>
+        </app-toolbar>
+      </app-header>
+        <!-- Main Content -->
+      <section class="main">
+        <div class="fit layout vertical content">
+          <section class="wizard" hidden$="{{_hideWizard(page)}}">
+            <timeu-wizard steps='["Genetic data","Imputation","Ancestry","Predictions"]' step="{{_currentWizardStep(page)}}"></timeu-wizard>
+          </section>
+          <neon-animated-pages attr-for-selected="data-route" id="pages" selected="{{page}}" on-display-toast="onDisplayToastMessage" fallbackSelection="view404">
+            <thg-start id="startPage" on-open-consent-dialog="_onOpenConsentDialog" on-open-delete-dialog="_onOpenDeleteDialog" data-route="start"></thg-start>
+            <thg-genotype-page data-route="genotype"></thg-genotype-page>
+            <hg-imputation-page data-route="imputation"></hg-imputation-page>
+            <hg-ancestry-page data-route="ancestry"></hg-ancestry-page>
+            <hg-predictions-page data-route="predictions"></hg-predictions-page>
+            <thg-view404 data-route="view404"></thg-view404>
+            <thg-view500 data-route="view500"></thg-view500>
+          </neon-animated-pages>
+        </div>
+      </section>
+    </app-header-layout>
+    <paper-dialog id="consentDialog" style="max-width:1000px;" on-iron-overlay-closed="_closeConsentDialog" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+        <h2>Terms and Consent</h2>
+        <paper-dialog-scrollable >
+            <p>Before you can use TheHonestGene, you have to provide agreement to the consent terms by checking the box and clicking "I AGREE" at the bottom of this page.</p>
+            <h3>Introduction</h3>
+            <p>You have a file with your genetic data and want to run a genetic risk prediction with TheHonestGene? Great! Before you start, though, we would like to tell you a few things about TheHonestGene and make sure that you understand the kind of research that we carry out, what it entails, as well as its benefits and potential risks. Remember: If you do decide to participate, you are free to revoke your consent and to discontinue participation at any time - no questions asked. Your participation is entirely voluntary!</p>
+            <h3>Purpose</h3>
+            <p>TheHonestGene is an open data platform for an alternative analysis of genetic data produced by personal genomics and biotechnology companies like 23andme, ancestryDNA and FamilyTreeDNA. This is a not-for-profit and open-source service provided by the Bioinformatics Research Centre (Aarhus, Denmark) and the Gregor Mendel Institute for Molecular Plant Biology (Vienna, Austria). The primary goal of TheHonestGene is to help you learn more about your DNA ancestry and allow you to run risk predictions for various traits, including health-related ones. As a secondary goal, we provide the possibility of anonymously donating your genetic data for scientific research.</p>
+            <h3>How to use?</h3>
+            <p>Risk prediction is entirely anonymous. We <b>will not</b> store any data of the user after the analyses are finished. After you provide consent, you can upload the genetic data you obtained from one of the various third-party personal genomics and biotechnology companies. The analysis consists of three parts:
+                <ol>
+                    <li>Parsing your genetic data & Imputation</li>
+                    <li>Ancestry analysis</li>
+                    <li>Risk prediction</li>
+                </ol>
+                There are no costs for using the service and you will not be compensated for participating either. At the end of the analysis the user has the chance to donate their genetic data annonymously for the benefit of future research.
+            <h3>Confidentiality & Privacy</h3>
+            <p>We highly value privacy and confidentiality, thereby the user can use TheHonestGene entirely anonymously. In fact, we do not require any registration or personal information. Your genetic data will only be stored temporarily for the course of the analyses and will be automatically deleted afterwards. No data will be saved. Furthermore the genetic data will be encrypted separately during its temporary storage on our servers in order to provide additional security. If you decide to use the CLOUD-Upload functionality by granting access to your account at a third-party personal genomics and biotechnology company, we will access your profile information but only for the purpose of retrieving your genetic data. You are welcome to use the alternative FILE-Upload functionality if you do not feel comfortable using the CLOUD-Upload feature.</p>
+            <h3>Benefits</h3>
+            <p>By using TheHonestGene, you will learn more about your genome for free. By optionally donating your genetic data, you can make a big contribution to science and help drive scientific research forward.</p>
+            <h3>Potential Risks</h3>
+            <p>There are no physical risks in using this service but there may be information risks. We are going to provide you with information about your genetic ancestry and with risk assessments related to various traits. As a result, you might find unexpected things about you. These can include a certain ethnic heritage or a predisposition for a disease. For some, such information is empowering; to others, these findings may cause anxiety or discomfort. As stated above, we will do our best to protect the information you provide to us. Despite our efforts (encrypting and not storing the data), we cannot guarantee that your data will never become leaked with significant implications in some scenarios. Please note that, even though we estimate that the risk for such a confidentiality breach is very low, it is not zero.</p>
+            <h3>Contact</h3>
+            <p>If you have questions, please email us at suggestions@thehonestgene.org
+                Address
+            </p>
+            <h3>Consent</h3>
+            <ul>
+            <li>I have read about this service. All my questions about the service and my role in it have been answered. I understand that my participation is voluntary and I freely consent to using this service.</li>
+            <li>I expressly authorize the processing and use of my data as indicated in the <b>Confidentiality & Privacy</b> section.</li>
+            <li>I understand that the research in this service may lead to new products, research tools or inventions that have financial value. By accepting the terms of this consent, I understand that I will not be able to share in the profits from future commercialization of products developed from this service.</li>
+            <li>I understand that the information served by TheHonestGene is only for educational and research purposes and it is experimental by nature. It is not intended to diagnose, treat, cure or prevent any disease.</li>
+            <li>I understand that TheHonestGene has the right to change the terms of this consent in the future.</li>
+            <li>By accepting the terms of this consent form, I have not given up any of my legal rights. I am free to withdraw my consent at any time and free of charge without providing a reason.</li></ul>
+            <p class="checkbox-line"><paper-checkbox checked="{{consentChecked}}"></paper-checkbox> By checking this box, you indicate that you have read and understood the above information and that you have decided to use the service based on the information provided.</li></p>
+        </paper-dialog-scrollable>
+        <div class="buttons">
+            <paper-button dialog-dismiss>Decline</paper-button>
+            <paper-button dialog-confirm autofocus disabled$="{{!consentChecked}}">I Agree</paper-button>
+        </div>
+    </paper-dialog>
+    <paper-dialog id="deleteDialog" on-iron-overlay-closed="_closeDeleteDialog" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+        <h2>Delete analysis?</h2>
+        <div>
+            Do you really want to delete the analysis?
+        </div>
+        <div class="buttons">
+            <paper-button dialog-dismiss autofocus>Cancel</paper-button>
+            <paper-button dialog-confirm raised>Delete</paper-button>
+        </div>
+    </paper-dialog>
+    <paper-toast id="toast">
+        <span class="toast-hide-button" role="button" tabindex="0" onclick="app.$.toast.hide()">Ok</span>
+      </paper-toast>
+  </template>
+
+  <script>
+
+    (function() {
+
+      Polymer({
+        is: 'thg-app',
+
+        behaviors: [ReduxBehavior],
+
+        properties: {
+          page: {
+            type: String,
+            statePath: 'currentStep',
+            observer: '_pageChanged'
+          },
+
+        },
+
+        _pageChanged: function(page) {
+          // Load page import on demand. Show 404 page if fails
+          var resolvedPageUrl = this.resolveUrl('thg-' + page + '.html');
+          this.importHref(resolvedPageUrl, null, this._showPage404, true);
+        },
+
+        _showPage404: function() {
+          this.page = 'view404';
+        },
+
+        _hideWizard: function(route)  {
+          return route === 'start' || route === 'view404';
+        },
+        _currentWizardStep: function(page) {
+          return steps.indexOf(page)+1;
+        },
+        _closeConsentDialog: function(e) {
+          this.$.startPage.closeConsentDialog(e.detail.confirmed);
+        },
+        _onOpenConsentDialog: function(e) {
+          this.$.consentDialog.open();
+        },
+        _closeDeleteDialog: function(e) {
+          const id = this.$.deleteDialog.analysisId;
+          delete this.$.deleteDialog.analysisId;
+          this.$.startPage.closeDeleteDialog(e.detail.confirmed,id);
+        },
+        _onOpenDeleteDialog: function(e) {
+          this.$.deleteDialog.analysisId = e.detail;
+          this.$.deleteDialog.open();
+        }
+      });
+    })();
+  </script>
+</dom-module>

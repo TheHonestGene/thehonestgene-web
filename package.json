@@ -1,0 +1,29 @@
+{
+  "name": "thehonestgene",
+  "version": "0.0.1",
+  "description": "Front-end for the TheHonestGene",
+  "engines": {
+    "node": ">=4.0"
+  },
+  "private": true,
+  "devDependencies": {
+    "babel-eslint": "^6.1.2",
+    "babel-plugin-transform-object-rest-spread": "^6.8.0",
+    "babel-preset-es2015": "^6.14.0",
+    "browser-sync": "^2.14.3",
+    "del": "^2.2.1",
+    "eslint": "^3.4.0",
+    "gulp": "gulpjs/gulp#4.0",
+    "gulp-babel": "^6.1.2",
+    "gulp-concat": "^2.6.0",
+    "gulp-if": "^2.0.1",
+    "gulp-imagemin": "^3.0.1",
+    "gulp-load-plugins": "^1.2.4",
+    "gulp-sourcemaps": "^1.6.0",
+    "http-proxy-middleware": "^0.17.1",
+    "merge-stream": "^1.0.0",
+    "plylog": "^0.4.0",
+    "polymer-build": "^0.4.0"
+  },
+  "dependencies": {}
+}

@@ -1,0 +1,207 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/neon-animation/neon-shared-element-animatable-behavior.html">
+<link rel="import" href="../../bower_components/neon-animation/animations/hero-animation.html">
+<link rel="import" href="../../bower_components/neon-animation/animations/scale-up-animation.html">
+<link rel="import" href="../../bower_components/neon-animation/animations/scale-down-animation.html">
+<link rel="import" href="../../bower_components/neon-animation/animations/cascaded-animation.html">
+<link rel="import" href="../../bower_components/neon-page-behavior/neon-page-behavior.html">
+<link rel="import" href="../../bower_components/paper-material/paper-material.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../shared-styles.html">
+
+<dom-module id="thg-upload-options">
+    <style include="shared-styles">
+        :host {
+            /*@apply(--layout-flex);
+            @apply(--layout-vertical);*/
+        }
+
+        .options {
+            @apply(--layout-horizontal);
+            @apply(--layout-around-justified);
+            @apply(--layout-center);
+        }
+
+        .container {}
+
+        .upload_icon {
+            width: 120px;
+            height: 120px;
+        }
+
+        .card {
+            width: 250px;
+            height: 250px;
+            @apply(--layout-center-center);
+            @apply(--layout-vertical);
+        }
+
+        @media (max-width: 600px) {
+            h1.paper-font-display1 {
+                font-size: 24px;
+            }
+            .options {
+                @apply(--layout-flex);
+                @apply(--layout-vertical);
+                @apply(--layout-center-justified);
+            }
+            .container {}
+        }
+    </style>
+    <template>
+        <paper-material elevation="1" class="infocard" id="infocard">
+            <div class="step">
+                <img src="/images/dna-icon.png">
+            </div>
+            <div class="description">
+                <h2>1. Genetic data</h2>
+                <p>In order to start an analysis, the user has to provide their genetic data. TheHonestGene currently supports this in two ways: (i) uploading the genetic data as a file or (i) transferring them automatically from one of the third-party companies where the user has an active account.</p>
+            </div>
+        </paper-material>
+        <section class="options">
+            <paper-material elevation="1" class="card" id="file" on-tap="_onTap">
+                <iron-icon class="upload_icon" icon="file-upload"></iron-icon>
+                <h2 class="paper-font-display1">UPLOAD</h2>
+            </paper-material>
+            <paper-material elevation="1" class="card" id="cloud" on-tap="_onTap">
+                <iron-icon class="upload_icon" icon="cloud-upload"></iron-icon>
+                <h2 class="paper-font-display1">CLOUD</h2>
+            </paper-material>
+        </section>
+    </template>
+    <script>
+        (function() {
+      'use strict';
+
+      Polymer({
+        is: 'thg-upload-options',
+        behaviors: [
+          Polymer.NeonSharedElementAnimatableBehavior,
+          Polymer.NeonPageBehavior
+        ],
+        properties: {
+          animationConfigFile: {
+            value: function() {
+              return {
+                'entry': [{
+                  name: 'hero-animation',
+                  id: 'hero',
+                  toPage: this
+
+                }, {
+                  name: 'transform-animation'
+                },
+                {
+                    name: 'fade-in-animation',
+                    node: this.$.infocard,
+                }],
+                'exit': [{
+                  name: 'hero-animation',
+                  id: 'hero',
+                  fromPage: this,
+                },
+                {
+                  name: 'transform-animation',
+                },
+                {
+                    name: 'fade-out-animation',
+                    node: this.$.infocard,
+                }],
+              };
+            }
+          },
+          animationConfigCloud: {
+              value: function() {
+                  return {
+                    'entry': [{
+                    name: 'hero-animation',
+                    id: 'hero',
+                    toPage: this
+
+                    }, {
+                    name: 'transform-animation'
+                    },
+                    {
+                        name: 'fade-in-animation',
+                        node: this.$.infocard,
+                    }],
+                    'exit': [{
+                    name: 'hero-animation',
+                    id: 'hero',
+                    fromPage: this,
+                    },
+                    {
+                    name: 'transform-animation',
+                    },
+                    {
+                        name: 'fade-out-animation',
+                        node: this.$.infocard,
+                    }],
+                };
+              }
+          },
+          animationConfig: {
+              value: function() {
+                var cards = Polymer.dom(this.root).querySelectorAll('.card');
+                var cardsArray = Array.prototype.slice.call(cards);
+                return {
+                    "entry":[{
+                        name: 'cascaded-animation',
+                        animation: 'transform-animation',
+                        transformFrom: 'translateY(60vh)',
+                        nodes:cardsArray,
+                        timing: {delay: 100}
+                        },{
+                            name:'scale-up-animation',
+                            node:this.$.infocard,
+                        }],
+                    'exit':[{
+                        name: 'cascaded-animation',
+                        animation: 'transform-animation',
+                        transformTo: 'translateY(60vh)',
+                        nodes:cardsArray,
+                        },{
+                            name: 'fade-out-animation',
+                            node: this.$.infocard,
+                        }]
+                };
+              }
+          }
+        },
+        _onTap: function(event) {
+          var target = event.currentTarget;
+          if (true) {
+            // configure the page animation
+            this.sharedElementsCloud = {
+              'hero': target,
+            };
+             this.sharedElementsFile = {
+              'hero': target,
+            };
+            var otherElem;
+            var direction;
+            if (target.id === 'file') {
+              direction = '+100vw';
+              otherElem = this.$.cloud;
+
+            } else {
+              direction = '-100vw';
+              otherElem = this.$.file;
+
+            }
+            this.animationConfigFile.exit[1].node = otherElem;
+            this.animationConfigFile.exit[1].transformTo = 'translateX(' + direction + ')';
+            this.animationConfigFile.entry[1].node = otherElem;
+            this.animationConfigFile.entry[1].transformFrom = 'translateX(' + direction + ')';
+
+            this.animationConfigCloud.exit[1].node = otherElem;
+            this.animationConfigCloud.exit[1].transformTo = 'translateX(' + direction + ')';
+            this.animationConfigCloud.entry[1].node = otherElem;
+            this.animationConfigCloud.entry[1].transformFrom = 'translateX(' + direction + ')';
+            this.fire('card-click',target.id);
+          }
+        }
+      });
+    })();
+    </script>
+</dom-module>

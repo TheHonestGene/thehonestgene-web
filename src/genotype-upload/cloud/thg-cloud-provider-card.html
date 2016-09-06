@@ -1,0 +1,39 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../../bower_components/iron-flex-layout/iron-flex-layout.html">
+
+<dom-module id="thg-cloud-provider-card">
+  <template>
+    <style>
+      :host {
+        width:300px;
+        height:250px;
+        @apply(--layout-center-center);
+        @apply(--layout-vertical);
+        @apply(--shadow-elevation-2dp);
+      }
+      paper-material {
+         width:100%;
+         height:100%;
+      }
+      img {
+          max-width:100%;
+          max-height:100%;
+      }
+    </style>
+    <img src$="{{logoUrl}}" />
+  </template>
+  <script>
+  (function() {
+    'use strict';
+
+    Polymer({
+      is: 'thg-cloud-provider-card',
+      properties: {
+        logoUrl: {
+            type:String,
+        }
+      },
+    });
+  })();
+  </script>
+</dom-module>

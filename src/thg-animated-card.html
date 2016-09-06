@@ -1,0 +1,102 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/flip-card/flip-card.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/iron-icons/editor-icons.html">
+
+
+<dom-module id="thg-animated-card">
+  <style include="shared-styles">
+    :host {
+        @apply(--layout-vertical);
+    }
+
+    h2 {
+        text-align: center;
+        @apply(--paper-font-headline);
+    }
+
+    flip-card {
+        @apply(--layout-flex);
+    }
+
+    front {
+        overflow:hidden;
+    }
+
+
+    front > div {
+        @apply(--layout-vertical);
+    }
+
+    back > div {
+        @apply(--layout-vertical);
+        @apply(--paper-font-body1);
+        @apply(--layout-fit);
+        padding:10px;
+    }
+
+    .description {
+        @apply(--layout-flex);
+        overflow-y:auto;
+    }
+
+    flip-card front,back {
+        @apply(--shadow-elevation-2dp);
+    }
+    .header {
+        @apply(--layout-horizontal);
+        @apply(--layout-center);
+        padding: 0 10px;
+    }
+    .header h2 {
+        @apply(--layout-flex);
+    }
+    iron-icon {
+        cursor:pointer;
+        opacity:0.5;
+    }
+
+  </style>
+  <template>
+      <flip-card id="card" axis$="{{axis}}" nohover flipped="{{flipped}}">
+          <front>
+            <div>
+              <div class="header"><h2>{{header}}</h2><iron-icon icon="icons:description" on-tap="_switchSides"></iron-icon></div>
+              <content select=".front"></content>
+            </div>
+          </front>
+          <back>
+            <div>
+              <div class="header"><h2>{{header}}</h2><iron-icon icon="editor:insert-chart" on-tap="_switchSides"></iron-icon></div>
+              <div class="description">
+                 <content select=".back"></content>
+              </div>
+            </div>
+          </back>
+      </flip-card>
+  </template>
+</dom-module>
+<script>
+(function() {
+  Polymer({
+    is: 'thg-animated-card',
+
+    properties: {
+         header: String,
+         axis: {
+           type: String,
+           value: 'y',
+         },
+         flipped: {
+           type: Boolean,
+           notify:true,
+         }
+    },
+    _switchSides: function(e) {
+      ga('send', 'event', 'Card', 'flipped',this.header);
+      this.$.card.toggle();
+    },
+
+  });
+})();
+</script>

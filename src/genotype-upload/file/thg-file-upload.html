@@ -1,0 +1,146 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../../../bower_components/neon-animation/neon-shared-element-animatable-behavior.html">
+<link rel="import" href="../../../bower_components/neon-page-behavior/neon-page-behavior.html">
+<link rel="import" href="../../../bower_components/neon-animation/animations/hero-animation.html">
+<link rel="import" href="../../../bower_components/neon-animation/animations/scale-up-animation.html">
+<link rel="import" href="../../../bower_components/neon-animation/animations/scale-down-animation.html">
+<link rel="import" href="../../../bower_components/paper-material/paper-material.html">
+<link rel="import" href="../../shared-styles.html">
+<link rel="import" href="thg-file-uploader.html">
+
+<dom-module id="thg-file-upload">
+  <style include="shared-styles">
+    :host {
+      /*@apply(--layout-vertical);*/
+    }
+  .big {
+    height: 32px;
+    width: 32px;
+  }
+  paper-toolbar {
+    --paper-toolbar-background:#39ba6f;
+  }
+
+  .container {
+     @apply(--layout-horizontal);
+     @apply(--layout-around-justified);
+     margin-top:20px;
+  }
+  </style>
+  <template>
+      <paper-material elevation="1" class="infocard" id="infocard">
+          <div class="step">
+               <img src="/images/dna-icon.png">
+          </div>
+          <div class="description">
+              <h2>File Upload</h2>
+                <p>Select or drag and drop a file containing your genetic data on the dropzone below. We support various file formarts from
+                    different companies (<a href="https://www.23andme.com/en-int/" target="_blank">23andMe</a>, <a href="http://dna.ancestry.com/" target="_blank">AncestryDNA</a>, <a href="https://www.familytreedna.com/" target="_blank">FamilyTreeDNA</a>).
+                    TheHonestGene will validate the file and display any issues. The user can then start the analysis by clicking on the “Upload” button.</p>
+               <div class="controls">
+                    <paper-button on-tap="_close"><iron-icon class="big"   icon="arrow-back" ></iron-icon> Back</paper-button>
+               </div>
+          </div>
+      </paper-material>
+      <div class="container" id="dropzonecontainer">
+        <thg-file-uploader id="upload" url="/api/genotype"></thg-file-uploader>
+      </div>
+  </template>
+  <script>
+    (function() {
+      'use strict';
+
+      Polymer({
+        is: 'thg-file-upload',
+
+        behaviors: [
+          Polymer.NeonSharedElementAnimatableBehavior,
+          Polymer.NeonPageBehavior
+        ],
+        properties: {
+          animationConfig: {
+            value: function() {
+              return {
+                'entry': [{
+                  name: 'scale-up-animation',
+                  node: this.$.dropzonecontainer
+                }],
+                'exit': [
+                {
+                  name: 'scale-down-animation',
+                  node: this.$.dropzonecontainer
+                }],
+              }
+            }
+          },
+          animationConfigList: {
+            value: function() {
+              return {
+                'entry': [{
+                  name: 'hero-animation',
+                  id: 'hero',
+                  toPage: this
+                },
+                {
+                  name: 'scale-up-animation',
+                  node: this.$.dropzonecontainer
+                }],
+                'exit': [{
+                  name: 'hero-animation',
+                  id: 'hero',
+                  fromPage: this
+                },
+                {
+                  name: 'scale-down-animation',
+                  node: this.$.dropzonecontainer
+                }],
+              };
+            }
+          },
+          animationConfigInfo: {
+            value: function() {
+              return {
+                'entry': [{
+                  name: 'scale-up-animation',
+                    node: this.$.infocard
+                },
+                {
+                  name: 'scale-up-animation',
+                  node: this.$.dropzonecontainer
+                }],
+                'exit': [{
+                   name: 'scale-down-animation',
+                    node: this.$.infocard
+                },
+                {
+                  name: 'scale-down-animation',
+                  node: this.$.dropzonecontainer
+                }],
+              };
+            }
+          },
+          sharedElementsList: {
+            value: function() {
+              return {
+                'hero': this.$.infocard,
+              };
+            }
+          },
+          sharedElementsInfo: {
+            value: function() {
+              return {
+                'hero': this.$.infocard,
+              };
+            }
+          }
+        },
+        _close: function() {
+          this.$.upload.reset();
+          this.fire('close-card');
+        },
+      });
+    })();
+  </script>
+</dom-module>
+

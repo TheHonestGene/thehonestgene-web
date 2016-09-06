@@ -1,0 +1,303 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../../../bower_components/paper-toast/paper-toast.html">
+<link rel="import" href="../../../bower_components/paper-progress/paper-progress.html">
+<link rel="import" href="../../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../polymer-redux-store.html">
+<link rel="import" href="../../shared-styles.html">
+
+<dom-module id="thg-file-uploader">
+  <style include="shared-styles">
+    :host {
+        @apply(--shadow-elevation-2dp);
+        @apply(--layout-vertical);
+        height:500px;
+        max-width:700px;
+        width:100%;
+        background-color:#39ba6f;
+    }
+    .dropzone {
+        cursor:pointer;
+        @apply(--layout-flex);
+        @apply(--layout-vertical);
+        @apply(--layout-center-center);
+        color:white;
+    }
+    .dropzone h2 {
+      text-align:center;
+    }
+
+    .hover {
+      border: 1px dashed DarkGray;
+    }
+    #uploadBtn  {
+
+    }
+    #cancelBtn {
+    }
+    .result {
+       @apply(--layout-flex);
+       @apply(--layout-vertical);
+    }
+
+    .info {
+        text-align:center;
+        color:white;
+    }
+    .buttonrow {
+      height:150px;
+      padding:8px;
+      background-color:white;
+      width:100%;
+      @apply(--layout-center-center);
+      @apply(--layout-horizontal);
+    }
+    .upload_icon {
+       height:120px;
+      width:120px;
+    }
+    .valid {
+        @apply(--layout-flex);
+        background-color:#39ba6f;
+    }
+    .valid.iconstatus {
+        box-shadow: 0px 1px 1px #4CB572;
+    }
+    .invalid {
+        @apply(--layout-flex);
+         background-color:#F44336;
+    }
+     .invalid.iconstatus {
+        box-shadow: 0px 1px 1px #F44336;
+    }
+    .iconstatus {
+        height: 100px;
+        width: 100px;
+        background: #fff;
+        margin: 0 auto;
+        margin-top: 50px;
+        border-radius: 5px;
+
+    }
+    .iconstatus svg {
+        margin:25px;
+    }
+    paper-progress.error {
+       --paper-progress-active-color: #e91e63;
+    }
+
+   paper-button.blue {
+       color: #fff;
+      --paper-button-flat-focus-color: var(--paper-blue-500);
+    }
+    paper-button.blue:hover {
+      background: var(--paper-blue-500);
+    }
+    paper-button[raised].blue {
+      background: var(--paper-blue-500);
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+  </style>
+  <template>
+      <div class="dropzone" hidden$="{{isFileSelected}}" id="dropzone" on-tap="onClick">
+         <iron-icon class="upload_icon" icon="file-upload"></iron-icon>
+         <h2 class="paper-font-display1">Drop files here or click to browse</h2>
+         <input type="file" id="fileInput" on-change="_onSelectFile" hidden>
+      </div>
+      <div hidden$="{{!isFileSelected}}" class="result">
+          <div class="valid" hidden$="{{!isFileValid}}">
+            <div class="iconstatus">
+                    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="50px" height="50px" viewBox="222.744 227.408 67.744 58.526" enable-background="new 222.744 227.408 67.744 58.526" xml:space="preserve">
+                        <path fill="#39BA6F" d="M250.062,285.934c-9.435-11.111-15.731-18.195-27.318-28.935l5.793-5.357
+                c6.778,3.28,11.076,5.774,18.693,11.204c14.32-16.25,23.783-24.495,41.372-35.438l1.886,4.335
+                C275.983,244.402,265.359,258.502,250.062,285.934z"></path>
+                    </svg>
+            </div>
+            <div class="info">
+                <h1>Great!</h1>
+                <p>The selected file {{file.name}} seems to be valid!</p>
+                <p>Click on "Upload" to proceed</p>
+            </div>
+          </div>
+          <div class="invalid" hidden$="{{isFileValid}}">
+              <div class="iconstatus">
+                    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="50px" height="50px" viewBox="222.744 227.408 67.744 58.526" enable-background="new 222.744 227.408 67.744 58.526" xml:space="preserve">
+                        <path fill="#F44336" d="M250.062,285.934c-9.435-11.111-15.731-18.195-27.318-28.935l5.793-5.357
+                c6.778,3.28,11.076,5.774,18.693,11.204c14.32-16.25,23.783-24.495,41.372-35.438l1.886,4.335
+                C275.983,244.402,265.359,258.502,250.062,285.934z"></path>
+                    </svg>
+            </div>
+            <div class="info">
+                <h1>Sorry :-(</h1>
+                <p>The selected file {{file.name}} is not valid!</p>
+            </div>
+          </div>
+          <div class="buttonrow">
+              <paper-progress id="progress"  hidden$="{{!_isDisplayProgress(uploadState)}}" value="{{percentageUploaded}}"></paper-progress>
+              <paper-button id="cancelBtn" on-tap="onCancel">Cancel</paper-button>
+              <paper-button id="uploadBtn" on-tap="onUpload" class="blue" disabled="{{!isFileValid}}" hidden="{{!isFileValid}}" raised><iron-icon icon="file-upload"></iron-icon>Upload</paper-button>
+          </div>
+       </div>
+       <paper-toast id="statusToast" text="File uploaded successfully!"></paper-toast>
+  </template>
+  <script>
+    (function() {
+      'use strict';
+
+      Polymer({
+        is: 'thg-file-uploader',
+        behaviors: [ ReduxBehavior ],
+
+        properties: {
+          url: {
+            type: String,
+            value: '/'
+          },
+          id: {
+            type: String,
+            statePath: 'id',
+          },
+          file: {
+            type: Object,
+            value: function() {return null;},
+            statePath: function(state) {
+                if (!(state.id in state.analyses))
+                   return;
+                return state.analyses[state.id].genotypeStep.fileUpload.genotypeFile;
+            },
+            observer: '_displayFile',
+          },
+          isFileSelected: {
+            type: Boolean,
+            computed: '_isFileSelected(file)',
+          },
+          isFileValid: {
+             type: Boolean,
+             //TODO make a computed variable
+             value:true
+          },
+          percentageUploaded: {
+            type: Number,
+            computed: '_calculatePercentageUploaded(progress)',
+          },
+          progress: {
+            type: Object,
+            value: function() {return null;},
+            statePath: function(state) { if (state.id in state.analyses) return state.analyses[state.id].genotypeStep.fileUpload.progress },
+            //statePath: 'genotypeStep.fileUpload.progress'
+          },
+          uploadState: {
+            type: Object,
+            value: function() { return null;},
+            statePath: function(state) { if (state.id in state.analyses) return state.analyses[state.id].genotypeStep.fileUpload.uploadState },
+            //statePath: 'genotypeStep.fileUpload.uploadState',
+            observer: '_updateUploadState'
+          }
+        },
+        listeners: {
+          drop: '_onDropFiles',
+          dragover: '_onDragOver',
+          dragleave: '_onDragLeave'
+        },
+        actions: {
+          selectFile: function(file) {
+            return {
+              type: 'SELECT_FILE_TO_UPLOAD',
+              file:file,
+              id:this.id,
+            };
+          },
+          uploadFile: function(file) {
+              return {
+                  type: 'UPLOAD_GENOTYPE',
+                  file:file,
+                  id: this.id,
+              }
+          }
+        },
+        _isFileSelected: function(file) {
+          return file !== null;
+        },
+        _onDropFiles: function(event) {
+          event.preventDefault();
+          var data = event.dataTransfer;
+          if (data.files.length <= 0) {
+            return;
+          }
+          ga('send', 'event', 'File', 'dragdrop');
+          this.dispatch('selectFile',data.files[0]);
+        },
+        _onDragOver: function(event) {
+          event.stopPropagation();
+          event.preventDefault();
+          this.toggleClass('hover',true,this.$.dropzone);
+          return false;
+        },
+        _onDragLeave: function() {
+          this.toggleClass('hover',false,this.$.dropzone);
+          return false;
+        },
+        _displayFile: function(file) {
+          this.$.progress.toggleClass('error',false);
+        },
+        _calculatePercentageUploaded: function(progress) {
+          if (!progress) {
+            return 0;
+          }
+          return Math.floor(progress.loaded / progress.total * 1000) / 10;
+        },
+        _progressChanged: function(event) {
+          this._setProgress(event.detail.value);
+        },
+        _isDisplayProgress: function(state) {
+          return state != null && state.state == 'STARTED';
+        },
+        onClick: function(event) {
+          var elem = this.$.fileInput;
+          event = Polymer.dom(event);
+          if (elem && document.createEvent && event.rootTarget !== elem) { // sanity check
+            var evt = document.createEvent('MouseEvents');
+            evt.initEvent('click', true, false);
+            elem.dispatchEvent(evt);
+          }
+        },
+        onCancel: function() {
+          ga('send', 'event', 'File', 'cancel');
+          this.reset();
+        },
+        _updateUploadState: function(state) {
+            if (state == null)
+                return;
+            if (state.state == 'ERROR') {
+                this.$.progress.toggleClass('error',true);
+                this.$.statusToast.text = 'Error uploading file';
+                this.$.statusToast.show();
+            }
+            else if (state.state == 'FINISHED') {
+                this.$.statusToast.text = 'Genotype successfully uploaded';
+                this.$.statusToast.show();
+            }
+        },
+        onUpload: function() {
+          if (!this.file) {
+            return;
+          }
+          ga('send', 'event', 'File', 'upload');
+          this.dispatch('uploadFile',this.file);
+        },
+        _onSelectFile: function(e) {
+          ga('send', 'event', 'File', 'select');
+          this.dispatch('selectFile',e.target.files[0]);
+        },
+        reset: function() {
+          this.dispatch('selectFile',null);
+          this.$.fileInput.value = '';
+        }
+      });
+    })();
+  </script>
+</dom-module>
+

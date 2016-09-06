@@ -1,0 +1,394 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/neon-animation/neon-shared-element-animatable-behavior.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../bower_components/paper-toast/paper-toast.html">
+<link rel="import" href="../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
+<link rel="import" href="../bower_components/neon-animation/neon-animatable-behavior.html">
+<link rel="import" href="../bower_components/neon-animation/animations/fade-in-animation.html">
+<link rel="import" href="../bower_components/neon-animation/animations/fade-out-animation.html">
+<link rel="import" href="../bower_components/neon-animation/animations/cascaded-animation.html">
+<link rel="import" href="../bower_components/neon-animation/animations/transform-animation.html">
+
+<link rel="import" href="../bower_components/neon-page-behavior/neon-page-behavior.html">
+<link rel="import" href="../bower_components/app-layout/app-grid/app-grid-style.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="polymer-redux-store.html">
+<link rel="import" href="thg-analysis-card.html">
+
+
+<dom-module id="thg-start">
+    <style include="app-grid-style">
+        :host {
+           --app-grid-columns: 1;
+           --app-grid-gutter: 16px;
+        }
+
+        .welcome-title {
+            @apply(--paper-font-title);
+        }
+
+        .welcome-text h3 {
+            @apply(--paper-font-subhead);
+            margin: 4px 0;
+        }
+        .welcome-text > div {
+            padding:2px 10px;
+            @apply(--shadow-elevation-2dp);
+            font-size:14px;
+        }
+        .sub_section {
+           @apply(--layout-vertical);
+           @apply(--layout-center);
+           min-height:400px;
+        }
+
+        .divider {
+           border-bottom: 1px solid var(--divider-color);
+           width: 250px;
+           margin:50px 0px;
+           position:relative;
+        }
+        .divider span {
+            position:absolute;
+            left:50%;
+            top:-12px;
+            background-color: #fff;
+            color: var(--secondary-text-color);
+        }
+        .started_btn {
+            background-color: var(--paper-green-500);
+            color: white;
+            width:250px;
+        }
+
+        .section h2 {
+            text-align:center;
+            @apply(--paper-font-headline);
+        }
+
+        .section {
+            @apply(--layout-vertical);
+            @apply(--layout-flex);
+        }
+
+        .analysis-card-container {
+            @apply(--layout-horizontal);
+            @apply(--layout-wrap);
+            @apply(--layout-around-justified);
+        }
+
+
+        @media (min-width: 960px) {
+            :host {
+                --app-grid-columns: 2;
+                --app-grid-gutter: 24px;
+            }
+            .welcome-title {
+                @apply(--paper-font-display2);
+            }
+            .welcome-text h3 {
+                @apply(--paper-font-title);
+                margin: 8px 0;
+            }
+            .welcome-text > div {
+                padding:5px 15px;
+                font-size:16px;
+            }
+            .sub_section {
+                @apply(--layout-horizontal);
+                @apply(--layout-around-justified);
+                align-items:stretch;
+                -webkit-align-items: stretch;
+            }
+
+            .section > div {
+                @apply(--layout-vertical);
+                @apply(--layout-flex);
+                @apply(--layout-center);
+                @apply(--layout-center-justified);
+            }
+
+            .divider {
+                border-left: 1px solid var(--divider-color);
+                border-bottom:none;
+                width: 1px;
+                padding:50px 0px;
+            }
+
+            .divider span {
+                position:absolute;
+                top:calc(50% - 14px);
+                left: -7px;
+            }
+        }
+
+        @media (min-width: 1280px) {
+            :host {
+                --app-grid-columns: 4;
+                --app-grid-gutter: 24px;
+            }
+            .welcome-title {
+                @apply(--paper-font-display3);
+            }
+
+            .welcome-text h3 {
+                @apply(--paper-font-headline);
+                margin: 8px 0;
+            }
+            .welcome-text > div {
+                padding:10px 20px;
+                font-size:18px;
+            }
+        }
+
+
+        .yellow-button {
+            text-transform: none;
+            color: var(--paper-yellow-500);
+        }
+        thg-analysis-card {
+            margin:10px;
+        }
+
+        .section h2 {
+            text-align:center;
+            @apply(--paper-font-headline);
+        }
+        .checkbox-line {
+            margin-left:50px;
+        }
+    </style>
+    <template>
+        <div class="welcome-title">Welcome<span hidden$="{{!hasData}}"> back</span> to TheHonestGene (BETA)</div>
+        <div class="welcome-text app-grid">
+            <div><h3 >Open & Free</h3>TheHonestGene is an open data platform for an alternative analysis of genetic data produced by personal genomics and biotechnology companies like 23andme, ancestryDNA and FamilyTreeDNA.</div>
+            <div><h3 >What can you do?</h3>In its current version, TheHonestGene offers reliable information about genetic ancestry, as well as predictions of the user’s <b>height</b> and <b>body mass index (BMI)</b>.</div>
+            <div><h3 >Accurate</h3>Unlike other genetic risk-assessment services, TheHonestGene uses a <b>truly polygenic</b> risk predictor, which in general yields more accurate predictions when sufficient training data are available.</div>
+            <div><h3 >Fast & Precise</h3>TheHonestGene uses cutting-edge prediction algorithms that are tuned to offer the best compromise between <b>accuracy</b> and <b>speed</b>. Typically, results are returned within minutes from data upload.</div>
+            <!--<div><h3 >Contribute to Science</h3>TheHonestGene ultimately offers the user the possibility of anonymously donating her/his genetic data for scientific research.</div>-->
+        </div>
+        <section class="sub_section">
+            <div class="section">
+                <h2>Start a new prediction</h2>
+                <div >
+                    <paper-button id="startedBtn" class="started_btn" raised on-tap="_showTermsAndConsent">GET STARTED</paper-button>
+                </div>
+            </div>
+            <div class="divider">
+                <span>or</span>
+            </div>
+            <div class="section">
+                <h2>View previous predictions</h2>
+                <div >
+                    <div class="analysis-card-container">
+                        <template is="dom-repeat" items="{{_toArray(analyses)}}"on-dom-change="_cardsRendered">
+                            <thg-analysis-card data-id$="{{item.name}}" data="{{_transformForCard(item)}}" on-delete-analysis="_deleteAnalysis" on-view-analysis="_viewAnalysis"></thg-analysis-card>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+        <iron-ajax id="idRequester" url="/api/id" handle-as="json" last-error="{{lastError}}" method="POST" on-response="_handleGenerateIdResponse"></iron-ajax>
+        <paper-toast id="toast1" duration="0" text="{{lastError.error}}" opened="{{_hasError(lastError)}}">
+            <paper-button onclick="toast1.toggle()" class="yellow-button">Close now!</paper-button>
+        </paper-toast>
+    </template>
+    <script>
+        (function() {
+      'use strict';
+
+      Polymer({
+        is: 'thg-start',
+        behaviors: [
+          Polymer.NeonAnimatableBehavior, ReduxBehavior, Polymer.NeonPageBehavior
+        ],
+        properties: {
+          consentChecked: {
+              type:Boolean,
+              value:false,
+          },
+          hasData: {
+              type:Boolean,
+              computed: '_hasData(analyses)',
+          },
+          analyses: {
+              type: Object,
+              statePath: 'analyses',
+          },
+          animationConfig: {
+            value: function() {
+              return {
+                'entry': [{
+                    name:'fade-in-animation',
+                    node: this.$.startedBtn,
+                },{
+                   name: 'cascaded-animation',
+                   animation: 'transform-animation',
+                   transformFrom: 'translateY(60vh)',
+                },{
+                    name: 'fade-in-animation',
+                    node: this,
+                },{
+                    name: 'transform-animation',
+                    transformFrom: 'translateY(-60vh)',
+                }],
+                'exit': [{
+                    name:'fade-out-animation',
+                    node: this.$.startedBtn,
+                },
+                {
+                   name: 'cascaded-animation',
+                   animation: 'transform-animation',
+                   transformTo: 'translateY(60vh)',
+                   timing: {delay: 100}
+                },{
+                    name: 'fade-out-animation',
+                    node: this,
+                },
+                {
+                    name: 'transform-animation',
+                    transformTo: 'translateY(-60vh)',
+                }]
+              };
+            }
+          }
+        },
+        actions: {
+            createNewAnalysis: function(id) {
+                return {
+                    type:'CREATE_NEW_ANALYSIS',
+                    id:id,
+                    date: Date.now(),
+                }
+            },
+            loadAnalysis: function(id)  {
+                return {
+                    type: 'LOAD_ANALYSIS',
+                    id,
+                }
+            },
+            nextpage: function() {
+                return {
+                    type: 'CHANGE_STEP',
+                }
+            },
+            deleteAnalysis: function(id) {
+                return {
+                    type:'DELETE_ANALYSIS',
+                    id:id,
+                }
+            },
+        },
+        _toArray: function(obj) {
+            return Object.keys(obj).map(function(key) {
+                return {
+                    name: key,
+                    value: obj[key]
+                };
+            });
+        },
+        _hasData: function(analyses)  {
+           return Object.keys(analyses).length > 0;
+        },
+        _showTermsAndConsent: function() {
+           this.consentChecked = false;
+           this.fire('open-consent-dialog');
+        },
+        closeConsentDialog: function(confirmed) {
+            if (confirmed) {
+                this.$.idRequester.generateRequest();
+                ga('send', 'event', 'Analysis', 'create');
+                ga('send', 'event', 'Consent', 'approved');
+            } else {
+               ga('send', 'event', 'Consent', 'declined');
+            }
+        },
+        _handleGenerateIdResponse: function(e) {
+            let id = this.$.idRequester.lastResponse.id;
+            this.dispatch('createNewAnalysis',id);
+            this.animationConfig.exit[0].name = 'scale-down-animation';
+            let cards = this._getNodesForCascade();
+            this.animationConfig.exit[1].nodes = cards;
+            this.animationConfig.entry[1].nodes = cards;
+            delete this.animationConfig.exit[3].node;
+            delete this.animationConfig.entry[3].node;
+            this.async(()=>this.dispatch('loadAnalysis',id));
+        },
+        _transformForCard: function(analysis) {
+            let item = analysis.value;
+            let id = analysis.name;
+            let genotype = null;
+            let version = null;
+            let gender = null;
+            if (item.genotypeStep.data !== null) {
+                genotype = item.genotypeStep.data.source;
+                version = item.genotypeStep.data.version;
+                gender = item.genotypeStep.data.gender;
+            }
+            let imputation = item.imputationStep.state.state === 'FINISHED';
+            let ancestry = null;
+            if (item.ancestryStep.data !== null) {
+                ancestry = item.ancestryStep.data.is_in_population;
+            }
+            let predictions = [];
+            for (let trait of this.getState().traits) {
+                predictions.push({name:trait.title,logourl:trait.logourl,state:trait.name in item.riskPredictionStep.runningAnalysis})
+            }
+            return {date:item.date,genotype,version,gender,imputation,ancestry,predictions,id}
+        },
+        _deleteAnalysis: function(e) {
+            this.fire('open-delete-dialog',e.detail);
+        },
+        closeDeleteDialog: function(confirmed,id) {
+            if (confirmed) {
+                ga('send', 'event', 'Analysis', 'delete');
+                // TODO animate it out
+                this.animationConfig.exit[0].name = 'fade-out-animation';
+                let card = this.$$('thg-analysis-card[data-id="'+id+'"]');
+                card.addEventListener('neon-animation-finish',() =>{
+                    this.dispatch('deleteAnalysis',id);
+                }) ;
+                card.animate();
+            }
+        },
+        _viewAnalysis: function(e) {
+            this.animationConfig.exit[0].transForm = 'fade-out-animation';
+            let target = e.currentTarget;
+            let nodesForCascade = this.animationConfig.exit[1].nodes.filter((it)=>it !== target);
+            this.animationConfig.exit[1].nodes = nodesForCascade;
+            this.animationConfig.entry[1].nodes = nodesForCascade;
+            this.animationConfig.exit[3].node = target;
+            this.animationConfig.entry[3].node = target;
+        },
+        _hasError: function(lastError) {
+            return lastError !== null;
+        },
+        _getNodesForCascade: function() {
+            var nodesToScale = [];
+            var cards = Polymer.dom(this.root).querySelectorAll('hg-analysis-card');
+            for (var node, index = 0; node = cards[index]; index++) {
+                nodesToScale.push(node);
+            }
+            return nodesToScale;
+        },
+        _cardsRendered: function() {
+            let cards = this._getNodesForCascade();
+            this.animationConfig.exit[1].nodes = cards;
+            this.animationConfig.entry[1].nodes = cards;
+        },
+        attached: function() {
+            this._updateGridStyles = this._updateGridStyles || function() {
+                this.updateStyles();
+            }.bind(this);
+            window.addEventListener('resize', this._updateGridStyles);
+        },
+        detached: function() {
+            window.removeEventListener('resize', this._updateGridStyles);
+        }
+      });
+    })();
+    </script>
+</dom-module>

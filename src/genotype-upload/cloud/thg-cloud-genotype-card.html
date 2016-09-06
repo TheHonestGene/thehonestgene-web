@@ -1,0 +1,88 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../../../bower_components/iron-icons/iron-icons.html">
+
+
+<dom-module id="thg-cloud-genotype-card">
+  <style>
+    :host {
+        width: 300px;
+        height: 250px;
+        @apply(--layout-vertical);
+    }
+    paper-card {
+            --paper-card-background-color: #fff;
+    }
+    .card-content div {
+        margin:5px;
+    }
+
+    paper-button {
+        @apply(--layout-self-end);
+        background: var(--paper-blue-500);
+        color: white;
+        margin: 10px;
+    }
+    .check.ok {
+        color:var(--paper-green-500);
+        font-weight:bold;
+    }
+    .check.notok {
+        color:var(--paper-red-500);
+    }
+
+    paper-card {
+        --paper-card-header-image-text: {
+          color:white;
+        };
+    }
+
+    paper-card.avatar {
+        --paper-card-header-image-text: {
+          color:black;
+        };
+    }
+
+  </style>
+  <template>
+      <paper-card heading="{{data.firstname}} {{data.lastname}}" class$="{{_computeClassForProfilePic(data.pics)}}" image="{{_computeImage(data.pics)}}" fadeImage preload-image="http://forums.warchest.com/images/avatars/blank.png">
+        <div class="card-content">
+        </div>
+        <div class="card-actions">
+            <paper-button on-tap="_clickUpload" hidden$="{{!data.genotyped}}" raised>Upload</paper-button>
+            <p hidden$="{{data.genotyped}}">This profile has not been genotyped</p>
+        </div>
+    </paper-card>
+  </template>
+</dom-module>
+<script>
+(function() {
+  Polymer({
+    is: 'thg-cloud-genotype-card',
+    properties: {
+        data: {
+            type:Object,
+        },
+
+    },
+    _clickUpload: function(e) {
+      this.fire('select',this.data.id);
+    },
+    _computeCheckClass: function(genotyped) {
+         return genotyped ? 'ok': 'notok';
+    },
+    _computeIconType: function(genotyped) {
+        return genotyped ? "icons:done" : "icons:clear";
+    },
+    _computeImage: function(pics) {
+        if ('url_size_200_200' in pics) {
+            return pics['url_size_200_200'];
+        }
+        return "http://forums.warchest.com/images/avatars/blank.png"
+    },
+    _computeClassForProfilePic: function(pics) {
+        return 'url_size_200_200' in pics ? '' : 'avatar';
+    }
+  });
+})();
+</script>

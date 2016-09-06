@@ -1,0 +1,210 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/moment-element/moment-element.html">
+
+
+
+<dom-module id="thg-analysis-card">
+  <style include="shared-styles">
+    :host {
+      display: block;
+      width:280px;
+    }
+
+   paper-card {
+       width:100%;
+   }
+
+    .card-content iron-icon {
+        margin-right:10px;
+    }
+    .card-actions {
+        @apply(--paper-font-button);
+        @apply(--layout-horizontal);
+        @apply(--layout-justified);
+        color: var(--primary-text-color);
+    }
+    .header {
+        margin-top:1px;
+        margin-bottom:16px;
+        @apply(--layout-horizontal);
+        @apply(--layout-center);
+    }
+    .header .title {
+        color: var(--primary-text-color);
+        @apply(--paper-font-headline);
+    }
+    .header .time {
+        margin-left:20px;
+    }
+    .header moment-element {
+      color: var(--secondary-text-color);
+      @apply(--paper-font-body1);
+    }
+
+    .analysis {
+        @apply(--layout-horizontal);
+        @apply(--paper-font-body1);
+        @apply(--layout-justified);
+        @apply(--layout-center);
+        color: var(--primary-text-color);
+    }
+
+    .analysis.ok {
+        color:var(--paper-green-500);
+    }
+
+    .analysis.notok {
+        color:var(--disabled-text-color);
+    }
+
+    .analysis .genotype {
+        color: var(--secondary-text-color);
+         @apply(--paper-font-caption);
+         font-size:10px;
+    }
+    .predictions {
+        margin-top:16px;
+        border-top: 1px solid #e8e8e8;
+    }
+    .predictions .subtitle {
+        @apply(--paper-font-body1);
+        color: var(--secondary-text-color);
+        line-height:48px;
+    }
+
+    .predictions .analysis img {
+         width:18px;
+        height:18px;
+        vertical-align:middle;
+    }
+    .predictions .analysis span {
+        margin-left:8px;
+    }
+
+    .avatar img {
+        width:50px;
+        height:50px;
+    }
+
+    a  {
+        text-decoration:none;
+    }
+
+  </style>
+  <template>
+      <paper-card>
+        <div class="card-content">
+            <div class="header">
+                 <div class="avatar">
+                     <img src$="images/{{_computeAvatar(data.gender)}}"></img>
+                 </div>
+                 <div class="time">
+                    <div class="title">{{_computeDaysPassed(data.date)}}</div>
+                    <moment-element id="date" datetime="{{data.date}}" output-format="MM-DD-YYYY"></moment-element>
+                 </div>
+            </div>
+            <div class$="analysis {{_computeCheckClass(data.genotype)}}">
+                <span>Genetic Data <span class="genotype">{{data.genotype}} {{data.version}}</span></span><iron-icon icon$="{{_computeIcon(data.genotype)}}"></iron-icon>
+            </div>
+            <div class$="analysis {{_computeCheckClass(data.imputation)}}">
+                <span>Imputation</span><iron-icon  icon$="{{_computeIcon(data.imputation)}}"></iron-icon>
+            </div>
+            <div class$="analysis {{_computeCheckClass(data.ancestry)}}" >
+                <span>Ancestry</span><iron-icon  icon$="{{_computeIcon(data.ancestry)}}"></iron-icon>
+            </div>
+            <div class="predictions">
+                <div class="subtitle">Predictions</div>
+                <template is="dom-repeat" items="{{data.predictions}}">
+                    <div class$="analysis {{_computeCheckClass(item.state)}}">
+                        <div>
+                            <img src$="{{item.logourl}}">
+                            <span>{{item.name}}</span>
+                        </div>
+                        <iron-icon  icon$="{{_computeIcon(item.state)}}"></iron-icon>
+                    </div>
+                </template>
+            </div>
+        </div>
+        <div class="card-actions">
+            <a href$="#/genotype/{{data.id}}" ><paper-button on-tap="_clickView">View</paper-button></a>
+            <paper-button on-tap="_clickDelete">Delete</paper-button>
+        </div>
+    </paper-card>
+  </template>
+</dom-module>
+<script>
+(function() {
+  Polymer({
+    is: 'thg-analysis-card',
+    behaviors: [
+        Polymer.NeonAnimationRunnerBehavior
+    ],
+    properties: {
+        data: {
+            type:Object,
+        },
+        animationConfig: {
+            value: function() {
+                return {
+                // provided by neon-animation/animations/scale-down-animation.html
+                name: 'scale-down-animation',
+                node: this
+                }
+            }
+            }
+    },
+
+  listeners: {
+    // this event is fired when the animation finishes
+    'neon-animation-finish': '_onNeonAnimationFinish'
+  },
+  animate: function() {
+    // run scale-down-animation
+    this.playAnimation();
+  },
+  _onNeonAnimationFinish: function() {
+    console.log('animation done!');
+  },
+  _computeAvatar: function(gender) {
+      let avatar = 'avatar_generic.png';
+      if (gender === 'm') {
+          avatar = 'avatar_male.png';
+      }
+      else if (gender === 'f') {
+          avatar = 'avatar_female.png';
+      }
+      return avatar;
+  },
+    _computeDaysPassed: function(date) {
+        return moment(date).fromNow();
+    },
+    _displayDate: function(date) {
+       return "19.02.2016";
+    },
+    _clickView: function() {
+        this.fire('view-analysis',this.data.id);
+    },
+    _computeCheckClass: function(item) {
+       return item ? 'ok': 'notok';
+    },
+    _computeIcon: function(item) {
+        return item ? 'icons:check' : 'icons:remove'
+    },
+    _clickDelete: function() {
+        this.fire('delete-analysis',this.data.id);
+    },
+  });
+})();
+</script>

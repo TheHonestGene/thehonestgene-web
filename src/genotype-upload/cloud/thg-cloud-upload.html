@@ -1,0 +1,227 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../../bower_components/neon-animation/neon-shared-element-animatable-behavior.html">
+<link rel="import" href="../../../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../../../bower_components/neon-animation/neon-animated-pages.html">
+<link rel="import" href="../../../bower_components/neon-animation/neon-animatable-behavior.html">
+<link rel="import" href="../../polymer-redux-store.html">
+<link rel="import" href="../../shared-styles.html">
+<link rel="import" href="thg-cloud-options.html">
+<link rel="import" href="thg-cloud-detail.html">
+
+
+<dom-module id="thg-cloud-upload">
+    <style include="shared-styles">
+        :host {
+            display: block;
+            @apply(--layout-layout);
+            @apply(--layout-vertical);
+        }
+
+        .big {
+            height: 32px;
+            width: 32px;
+        }
+
+        .cloudpage {
+        }
+
+        thg-cloud-provider {
+            cursor: pointer;
+        }
+
+
+        .genotype {
+            width: 300px;
+            height: 250px;
+            @apply(--layout-vertical);
+        }
+
+        .genotype h2 {
+            @apply(--layout-flex);
+            text-align: center;
+            margin-top: 100px;
+        }
+
+        .genotype paper-button {
+            @apply(--layout-self-end);
+            background: var(--paper-blue-500);
+            color: white;
+            margin: 10px;
+        }
+        neon-animated-pages {
+
+        }
+    </style>
+    <template>
+        <thg-cloud-options cloud-data-route="list" id="list" class="cloudpage" on-close-options="_onCloseOptions" on-select-provider="_onSelectProvider" providers="[[providers]]"></thg-cloud-options>
+        <!--<neon-animated-pages selected="[[cloudpage]]" attr-for-selected="cloud-data-route">
+            <thg-cloud-detail class="cloudpage" cloud-data-route="detail" id="detail" provider="[[selectedProvider]]" on-close-detail="_onCloseDetail" on-select-genotype="_onSelectGenotype" genotypes="[[currentGenotypes]]"></thg-cloud-detail>
+        </neon-animated-pages>-->
+    </template>
+    <script>
+        (function() {
+      'use strict';
+
+      Polymer({
+        is: 'thg-cloud-upload',
+
+        behaviors: [
+          ReduxBehavior,
+          Polymer.NeonAnimatableBehavior
+        ],
+        actions: {
+          retrieveGenotypes: function(provider,code) {
+            return {
+                type: 'RETRIEVE_CLOUD_GENOTYPES',
+                code:code,
+                provider:provider,
+                id: this.id,
+            };
+          },
+          transferGenotype: function(provider,id) {
+              return {
+                  type: 'TRANSFER_GENOTYPE_FROM_PROVIDER',
+                  provider:provider,
+                  id: this.id,
+                  genotypeId:id,
+              }
+          },
+          selectProvider: function(provider) {
+            return {
+                type: 'SELECT_PROVIDER',
+                provider:provider,
+                id: this.id,
+            }
+          },
+        },
+        properties: {
+          animationConfig: {
+            value: function() {
+                return {
+                    'entry': [
+                    {animatable: this.$.list, type: 'entry'},
+                ],
+                    'exit': [
+                    {animatable: this.$.list, type: 'exit'},
+                ]
+                }
+            }
+          },
+          cloudpage: {
+              type:String,
+              value: 'list',
+              observer:'_onChangeCloudPage',
+          },
+          providers: {
+            type: Array,
+            value: function() {
+                return []
+            },
+            statePath:'availableProviders'
+          },
+          id: {
+            stype:String,
+            statePath: 'id',
+          },
+          selectedProviders: {
+            type:Object,
+            value: function() {return {}},
+            statePath: function(state) { return state.id in state.analyses ? state.analyses[state.id].genotypeStep.cloudUpload.selectedProviders : {} }
+            //statePath:'genotypeStep.cloudUpload.selectedProviders'
+          },
+          currentProvider: {
+            type: String,
+            statePath: function(state) { return state.id in state.analyses ? state.analyses[state.id].genotypeStep.cloudUpload.currentProvider : null },
+            //statePath:'genotypeStep.cloudUpload.currentProvider',
+            observer:'_changeCurrntProvider'
+          },
+          selectedProvider: {
+              type: Object,
+              computed: '_getSelectedProvider(currentProvider)'
+          },
+          currentGenotypes: {
+              type: Object,
+          }
+        },
+        _getGenotypesFromProvider: function(currentProvider) {
+            if (currentProvider && this.selectedProviders[currentProvider]) {
+                return this.selectedProviders[currentProvider].userInfo;
+            }
+            return {};
+        },
+        ready: function() {
+
+        },
+        _onSelectProvider: function(e) {
+            var provider = e.detail;
+            if (!this.selectedProviders.hasOwnProperty(provider.name)) {
+                this._openOAuthWindow(provider.name,provider.tokenurl,provider.redirectUrl);
+            } else {
+                this.dispatch('selectProvider',provider.name);
+            }
+        },
+        _changeCurrntProvider: function(currentProvider) {
+           let page = 'list';
+           let genotypes = this.currentGenotypes;
+           if (currentProvider !== null) {
+               page = 'detail';
+               this.currentGenotypes = this._getGenotypesFromProvider(currentProvider);
+           }
+           this.async(()=>this.cloudpage = page);
+        },
+       _onSelectGenotype: function(e) {
+           ga('send', 'event', 'Cloud', 'upload',this.currentProvider);
+           this.dispatch('transferGenotype',this.currentProvider,e.detail);
+        },
+        _getSelectedProvider: function(currentProvider) {
+            if (currentProvider === null)
+                return null;
+            var filteredProvider = this.providers.filter((provider)=>provider.name===currentProvider);
+            if (filteredProvider.length > 0) {
+                return filteredProvider[0];
+            }
+            return null;
+        },
+        _openOAuthWindow: function(provider,tokenurl,redirectUrl) {
+            var win = window.open(tokenurl, 'windowname1', 'width=800, height=600');
+            var pollTimer = window.setInterval(function() {
+                try {
+                    if (win.document.URL.indexOf(redirectUrl) !== -1) {
+                        window.clearInterval(pollTimer);
+                        var url = win.document.URL;
+                        var code = this._gup(url, 'code');
+                        win.close();
+                        ga('send', 'event', 'Cloud', 'authenticate',provider);
+                        this.dispatch('retrieveGenotypes',provider,code);
+                    }
+                } catch (e) {
+                }
+            }.bind(this), 100);
+        },
+        _gup: function(url, name) {
+            name = name.replace(/[[]/,'\[').replace(/[]]/,'\]');
+            var regexS = '[\?&]' + name + '=([^&#]*)';
+            var regex = new RegExp(regexS);
+            var results = regex.exec(url);
+            if (results === null) {
+            return '';
+            } else {
+            return results[1];
+            }
+        },
+        _onCloseOptions: function() {
+            this.dispatch('selectProvider',null);
+            this.fire('close-card');
+        },
+        _onCloseDetail: function() {
+            this.dispatch('selectProvider',null);
+        },
+        _onChangeCloudPage: function(newPage) {
+            let subPage = this.$$('[cloud-data-route="'+newPage+'"]');
+            this.animationConfig.entry[0] =  {animatable: subPage, type: 'entry'};
+            this.animationConfig.exit[0] =  {animatable: subPage, type: 'exit'};
+        },
+      });
+    })();
+    </script>
+</dom-module>

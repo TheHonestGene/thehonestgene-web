@@ -1,0 +1,143 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../../bower_components/neon-animation/neon-shared-element-animatable-behavior.html">
+<link rel="import" href="../../../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../../../bower_components/paper-material/paper-material.html">
+<link rel="import" href="../../polymer-redux-store.html">
+<link rel="import" href="thg-cloud-genotype-card.html">
+
+
+
+<dom-module id="thg-cloud-detail">
+    <style include="">
+        :host {
+            @apply(--layout-layout);
+            @apply(--layout-vertical);
+        }
+
+        .big {
+            height: 32px;
+            width: 32px;
+        }
+
+        .cloudpage {
+            @apply(--layout-vertical);
+            @apply(--layout-flex);
+        }
+
+        .detail {
+            @apply(--layout-center);
+            @apply(--layout-around-justified);
+            @apply(--layout-horizontal);
+            @apply(--layout-wrap);
+            @apply(--layout-flex);
+        }
+
+        thg-cloud-provider {
+            cursor: pointer;
+        }
+
+        iron-pages {
+            @apply(--layout-flex);
+            @apply(--layout-vertical);
+        }
+    </style>
+    <template>
+        <section class="cloudpage"  id="detail">
+            <paper-material elevation="1" class="infocard" id="infocard">
+                <div class="step">
+                    <img src="{{provider.logoUrl}}">
+                </div>
+                <div class="description">
+                    <h2>{{provider.title}}</h2>
+                    <p>
+                        {{provider.description}}
+                    </p>
+                    <div class="controls">
+                        <paper-button on-tap="_closeDetailView">
+                            <iron-icon class="big" icon="arrow-back"></iron-icon> Back</paper-button>
+                    </div>
+                </div>
+            </paper-material>
+            <section class="detail" id="detail_contethg-cloud-detail.htmlnt" >
+                <template is="dom-repeat" items="{{genotypes.profiles}}" on-dom-change="_genotypesRendered">
+                    <thg-cloud-genotype-card class="genotype" data="{{item}}" on-select="_selectGenotype"></thg-cloud-genotype-card>
+                </template>
+            </section>
+        </section>
+    </template>
+    <script>
+        (function() {
+      'use strict';
+
+      Polymer({
+        is: 'hg-cloud-detail',
+
+        behaviors: [
+          ReduxBehavior,
+          Polymer.NeonSharedElementAnimatableBehavior
+        ],
+        properties: {
+            sharedElements: {
+                value: function() {
+                    return {
+                      'hero': this.$.infocard,
+                    };
+                },
+          },
+          animationConfig: {
+            value: function() {
+              return {
+                'entry': [{
+                  name: 'hero-animation',
+                  id: 'hero',
+                  toPage: this
+                },
+                {
+                  name: 'cascaded-animation',
+                  animation: 'transform-animation',
+                  transformFrom: 'translateX(100vw)',
+                  duration: {delay:100},
+                },
+                ],
+                'exit': [{
+                  name: 'hero-animation',
+                  id: 'hero',
+                  fromPage: this,
+                },
+                {
+                  name: 'cascaded-animation',
+                  animation: 'transform-animation',
+                  transformTo: 'translateX(100vw)',
+                }
+                ],
+              };
+            }
+          },
+          provider: {
+              type: Object,
+          },
+          genotypes: {
+              type: Object,
+          }
+        },
+        ready: function() {
+
+        },
+        _closeDetailView: function() {
+            this.fire('close-detail');
+        },
+        _selectGenotype: function(e) {
+          this.fire('select-genotype',e.detail);
+        },
+        _genotypesRendered: function() {
+          var providers = Polymer.dom(this.root).querySelectorAll('.genotype');
+          var providersArray = Array.prototype.slice.call(providers);
+          if (providersArray.length) {
+            this.animationConfig.exit[1].nodes = providersArray;
+            this.animationConfig.entry[1].nodes = providersArray;
+          }
+        }
+      });
+    })();
+    </script>
+</dom-module>

@@ -1,0 +1,193 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/neon-animation/neon-animated-pages.html">
+<link rel="import" href="../bower_components/neon-animation/neon-animatable-behavior.html">
+<link rel="import" href="genotype-upload/thg-upload-options.html">
+<link rel="import" href="genotype-upload/file/thg-file-upload.html">
+<link rel="import" href="genotype-upload/cloud/thg-cloud-upload.html">
+<link rel="import" href="thg-genotype-info.html">
+<link rel="import" href="polymer-redux-store.html">
+
+<dom-module id="thg-genotype-page">
+  <style>
+    :host {
+        @apply(--layout-vertical);
+        @apply(--layout-flex);
+    }
+    #gpages {
+        @apply(--layout-flex);
+    }
+  </style>
+  <template>
+    <neon-animated-pages selected="[[_computeRoute(uploadState,route)]]" id="gpages" attr-for-selected="route"  on-close-card="_onCardClick">
+      <thg-upload-options route="list" id="list" on-card-click="_onCardClick"></thg-upload-options>
+      <thg-file-upload route="file"></thg-file-upload>
+      <thg-cloud-upload route="cloud"></thg-cloud-upload>
+      <thg-genotype-info id="genotpyeInfo" route="info" numberofsnps="{{genotypeData.num_of_snps}}"
+        data-for-annotations="{{dataForAnnotations}}"
+        data-for-annotations-per-chr="{{dataForAnnotationsPerChr}}"
+        data-for-number-of-snps="{{dataForNumberOfSNPS}}"
+        data-for-hetero = "{{dataForHetereo}}"
+        data-for-hetero-per-chr="{{dataForHetereoPerChr}}" >
+      </thg-genotype-info>
+    </neon-animated-pages>
+  </template>
+  <script>
+    (function() {
+      'use strict';
+
+      Polymer({
+        is: 'thg-genotype-page',
+        behaviors: [Polymer.NeonAnimatableBehavior, Polymer.IronResizableBehavior, ReduxBehavior],
+
+        properties: {
+            animationConfig: {
+                value: function() {
+                   return {
+                       'entry': [
+                        {animatable: this.$.list, type: 'entry'},
+                        {animatable: this.$.genotpyeInfo, type: 'entry'},
+                    ],
+                    'exit': [
+                        {animatable: this.$.list, type: 'exit'},
+                        {animatable: this.$.genotpyeInfo, type: 'exit'}
+                    ]
+                   }
+                },
+            },
+          route: {
+              type: String,
+              statePath: function(state) { return state.id in state.analyses ? state.analyses[state.id].genotypeStep.step : this.route},
+              observer:'_onChangeRoute',
+          },
+          uploadState: {
+             type: String,
+             statePath: function(state) {return state.id in state.analyses ? state.analyses[state.id].genotypeStep.uploadState.state : null},
+          },
+          genotypeData: {
+            type: Object,
+            statePath: function(state) {return state.id in state.analyses ? state.analyses[state.id].genotypeStep.data : undefined},
+            observer: '_updateGenotypeData'
+          },
+          dataForNumberOfSNPS: {
+              type: Object
+          },
+          dataForAnnotationsPerChr: {
+              type: Object
+          },
+          dataForHetereo: {
+              type: Object
+          },
+          dataForHetereoPerChr: {
+              type:Object
+          }
+
+        },
+        listeners: {
+        'entry-animation-start': 'onEntryStart',
+        'entry-animation-finish': 'onEntryFinish',
+        'exit-animation-start': 'onExitStart',
+        'exit-animation-finish': 'onExitFinish'
+      },
+        actions: {
+            changePage: function(page) {
+                return {
+                    type: 'CHANGE_UPLOAD_PAGE',
+                    page:page,
+                    id: this.getState().id,
+                };
+            }
+          },
+          _computeRoute: function(state,route) {
+              if (!state) {
+                  return route;
+              }
+              return 'info';
+          },
+        _updateGenotypeData : function(data) {
+            if (!data) {
+                this.$.genotpyeInfo.reset();
+                return null;
+            }
+            var annotations =  this._getAnnotationTypesFromData(data);
+            var dataForNumberOfSNPS = [['Chr','# of SNPs']];
+            var dataForAnnotations = [['Annotation','# of SNPs']];
+            var dataForAnnotationsDict = {};
+            var dataForHetereo = [['Type','# of SNPs'],['Heterozygous',0],['Homozygous',0]];
+            var dataForHetereoPerChr = [['Chr','Heterozygous','Homozygous']];
+            for (var i=0;i< annotations.length;i++) {
+               dataForAnnotationsDict[annotations[i]] = 0;
+            }
+            var dataForAnnotationsPerChr = [['Chr']];
+            dataForAnnotationsPerChr.push.apply(dataForAnnotationsPerChr[0],annotations);
+            // required because for in does not keep sort order
+            let chrs = Object.keys(data.chr_stats).sort((a,b)=> parseInt(a.substring(3))-parseInt(b.substring(3)));
+            for (let chr of chrs) {
+                var chr_data = data.chr_stats[chr];
+                dataForNumberOfSNPS.push([chr,chr_data.num_of_snps]);
+                var annotationData = [chr]
+                var hetereoCount = 0;
+                var homoCount = 0;
+                for (var i=0;i< annotations.length;i++ ) {
+                    var annot = annotations[i];
+                    var annotationCount = chr_data.annotations[annot];
+                    if (annotationCount === undefined) {
+                        annotationCount =0 ;
+                    }
+                    annotationData.push(annotationCount);
+                    dataForAnnotationsDict[annot]+=annotationCount;
+
+                    if (this._isHetereo(annot)) {
+                       hetereoCount+=annotationCount;
+                    }
+                    else {
+                       homoCount+=annotationCount;
+                    }
+                }
+                dataForHetereo[1][1]+=hetereoCount;
+                dataForHetereo[2][1]+=homoCount;
+                dataForHetereoPerChr.push([chr,hetereoCount,homoCount])
+                dataForAnnotationsPerChr.push(annotationData);
+            }
+            this.dataForNumberOfSNPS = dataForNumberOfSNPS;
+            this.dataForHetereoPerChr = dataForHetereoPerChr;
+            this.dataForHetereo = dataForHetereo;
+            for (var annot in dataForAnnotationsDict) {
+                dataForAnnotations.push([annot,dataForAnnotationsDict[annot]]);
+            }
+            this.dataForAnnotations = dataForAnnotations;
+            this.dataForAnnotationsPerChr = dataForAnnotationsPerChr;
+        },
+        _getAnnotationTypesFromData : function(data) {
+           var keys = Object.keys(data.chr_stats);
+           var annotations = Object.keys(data.chr_stats[keys[0]].annotations);
+           return annotations;
+        },
+        _isHetereo: function(annot) {
+          return annot === 'AA' || annot === 'GG' || annot==='CC' || annot === 'TT';
+        },
+        _onCardClick: function(event) {
+           var page = event.detail;
+           if (typeof page === 'object') {
+               page = "list";
+           }
+           return this.dispatch('changePage',page);
+        },
+        _onChangeRoute: function(newRoute,oldRoute) {
+            /*let subPage = this.$$('[route="'+newRoute+'"]');
+            this.animationConfig.entry[0] =  {animatable: subPage, type: 'entry'};
+            this.animationConfig.exit[0] =  {animatable: subPage, type: 'exit'};*/
+        },
+      onEntryStart: function(e) {
+
+      },
+      onEntryFinish: function(e) {
+      },
+      onExitStart: function(e) {
+      },
+      onExitFinish: function(e) {
+      }
+      });
+    })();
+  </script>
+</dom-module>
+
