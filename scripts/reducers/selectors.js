@@ -1,4 +1,4 @@
-const getTaskId = (state,analysisType,traits) => {
+export function getTaskId(state,analysisType,traits)  {
   let id = getGenotypeId(state);
   if (!id) return null;
   switch (analysisType) {
@@ -24,8 +24,8 @@ const getTaskId = (state,analysisType,traits) => {
       return null;
     default: throw Error('Analysis ' + analysisType + ' unknown');
   }
-};
+}
 
-const getGenotypeId = (state) => state.id;
+export function getGenotypeId(state)  { return state.id; }
 
-const getAccessToken = (state,provider,id) => state.analyses[id].genotypeStep.cloudUpload.selectedProviders[provider].accessToken;
+export function getAccessToken(state,provider,id) { return state.analyses[id].genotypeStep.cloudUpload.selectedProviders[provider].accessToken; }

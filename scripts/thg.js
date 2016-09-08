@@ -1,3 +1,10 @@
+import 'babel-polyfill'
+import {createStore,applyMiddleware,compose} from 'redux';
+import createSagaMiddleware from 'redux-saga'
+import rootReducer, {steps} from './reducers';
+import rootSaga from './sagas';
+
+
 var initialState = undefined;
 let persistedState = localStorage.getItem('thehonestgene')
 if (persistedState !== null) {
@@ -17,19 +24,18 @@ function debounce(func, wait, immediate) {
 		timeout = setTimeout(later, wait);
 		if (callNow) func.apply(context, args);
 	};
-};
+}
 
 const persistState = debounce(function() {
     localStorage.setItem('thehonestgene',JSON.stringify(store.getState()));
 }, 1000);
 
 
-const createSagaMiddleware = ReduxSaga.default;
 const sagaMiddleware = createSagaMiddleware();
 
-var store = Redux.createStore(rootReducer,initialState,
-    Redux.compose(
-        Redux.applyMiddleware(sagaMiddleware),
+const store = createStore(rootReducer,initialState,
+    compose(
+        applyMiddleware(sagaMiddleware),
         window.devToolsExtension ? window.devToolsExtension() : f => f));
 
 sagaMiddleware.run(rootSaga);
@@ -37,3 +43,10 @@ sagaMiddleware.run(rootSaga);
 store.subscribe(()=> {
   persistState();
 });
+
+const Thg = Thg || {
+	store:store,
+	steps: steps
+}
+
+export default Thg

@@ -176,7 +176,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           return route === 'start' || route === 'view404';
         },
         _currentWizardStep: function(page) {
-          return steps.indexOf(page)+1;
+          return THG.steps.indexOf(page)+1;
         },
         _closeConsentDialog: function(e) {
           this.$.startPage.closeConsentDialog(e.detail.confirmed);

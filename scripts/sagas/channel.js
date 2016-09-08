@@ -1,4 +1,4 @@
-function createChannel () {
+export default function createChannel () {
   const messageQueue = []
   const resolveQueue = []
 

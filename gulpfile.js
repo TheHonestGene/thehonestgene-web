@@ -13,6 +13,11 @@
 const path = require('path');
 const gulp = require('gulp');
 const $ = require('gulp-load-plugins')();
+const rollup = require('rollup');
+const babel = require('rollup-plugin-babel');
+const nodeResolve = require('rollup-plugin-node-resolve');
+const commonjs = require('rollup-plugin-commonjs');
+const nodeGlobals = require('rollup-plugin-node-globals');
 
 // Got problems? Try logging 'em
 //const logging = require('plylog');
@@ -42,6 +47,33 @@ global.config = {
   }
 };
 
+gulp.task('script', function () {
+  return rollup.rollup({
+    entry: 'scripts/thg.js',
+    plugins: [
+      nodeResolve({jsnext: true, main: true, browser:true}),
+      commonjs({
+        //
+        include: 'node_modules/**',
+        exclude: [
+          './node_modules/process-es6/browser.js',
+          './node_modules/rollup-plugin-node-globals/src/global.js',
+          './node_modules/symbol-observable/es/index.js'
+        ]
+      }),
+      babel({exclude: 'node_modules/**'}),
+      nodeGlobals()
+    ]
+  }).then(function (bundle) {
+    return bundle.write({
+      format: 'iife',
+      moduleName: 'THG',
+      moduleId: 'THG',
+      dest: 'src/scripts/thg.js'
+    });
+  });
+});
+
 // Add your own custom gulp tasks to the gulp-tasks directory
 // A few sample tasks are provided for you
 // A task should return either a WriteableStream or a Promise
@@ -60,7 +92,7 @@ function source() {
   return project.splitSource()
     // Add your own build tasks here!
     //.pipe($.if('**/*.js',$.sourcemaps.init({identityMap:true})))
-    .pipe($.if('**/*.js',$.babel()))
+    .pipe($.if(['**/*.js','!src/scripts/**'],$.babel()))
     //.pipe($.if('**/*.js',$.sourcemaps.write('.')))
     .pipe($.if('**/*.{png,gif,jpg,svg}', images.minify()))
     .pipe(project.rejoin()); // Call rejoin when you're finished
@@ -79,6 +111,7 @@ function dependencies() {
 // and process them, and output bundled and unbundled versions of the project
 // with their own service workers
 gulp.task('default', gulp.series([
+  'script',
   clean.build,
   project.merge(source, dependencies),
   project.serviceWorker
@@ -91,6 +124,7 @@ function onlyUnbundled(done) {
   done()
 }
 gulp.task('dev',gulp.series(
+      'script',
       onlyUnbundled,
       clean.build,
       project.merge(source, dependencies)

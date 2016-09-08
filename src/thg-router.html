@@ -71,9 +71,9 @@
                 let step = page.step;
                 ga('set', 'page', '/'+step);
                 let id = page.id;
-                if (!step || (step !== 'start' && steps.indexOf(step) === -1) || (step === 'start' && id) || (id && ! (id in this.getState().analyses))) {
+                if (!step || (step !== 'start' && THG.steps.indexOf(step) === -1) || (step === 'start' && id) || (id && ! (id in this.getState().analyses))) {
                     this.async(()=> {
-                        if ((step !== 'start' && steps.indexOf(step) === -1) || (id && ! (id in this.getState().analyses))) {
+                        if ((step !== 'start' && THG.steps.indexOf(step) === -1) || (id && ! (id in this.getState().analyses))) {
                             this._notify('Can\'t find: ' + window.location.href + '. Redirected you to Start');
                         }
                         ga('set', 'page', '/start');
