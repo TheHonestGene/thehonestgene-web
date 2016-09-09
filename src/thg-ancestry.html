@@ -1,0 +1,293 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/google-chart/google-chart.html">
+<link rel="import" href="../bower_components/paper-progress/paper-progress.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../bower_components/neon-animation/neon-animatable-behavior.html">
+<link rel="import" href="polymer-redux-store.html">
+<link rel="import" href="thg-info-card.html">
+
+<dom-module id="thg-ancestry">
+    <style include="shared-styles">
+        :host {
+            @apply(--layout-vertical); 
+        }
+        google-chart {
+            width:100%;
+            visibility: hidden;
+            @apply(--layout-flex);
+            min-height:800px;
+        }
+        section  {
+            @apply(--layout-vertical);
+            @apply(--layout-flex);
+        }
+        paper-progress {
+            --paper-progress-height:20px;
+        }
+        .chartcontainer {
+            margin-top:20px;
+            @apply(--layout-flex);
+            @apply(--layout-vertical);
+        }
+        .buttons {
+            @apply(--layout-horizontal);
+            @apply(--layout-self-end);
+        }
+    </style>
+    <template>
+        <section>
+            <thg-info-card image="/images/dna-icon.png" title="3. Genetic ancestry" id="infocard" class="infocard">
+                <p class="info-content">Individuals from different geographic regions present systematic differences in their genetic data. As a general rule, individuals from the same geographic region are on average more similar in their genetic composition compared to individuals from a different region. When such differences arise in the analysis of a sample of individuals, we say that the sample is structured. There are many ways to study the structure of a sample; one of the most commonly used is principal component analysis (PCA). PCA resumes large amounts of genetic data in plots of two or three dimensions that are perceivable by the human brain. In these plots, spatial proximity corresponds to genetic affinity. By analyzing an unknown sample together with samples from known geographic regions, information can be drawn regarding the origin of the former. Such analysis, apart from being interesting in its own right, is crucial because it determines whether a genetic prediction is reliable or not. This is because our prediction algorithms are trained on data from individuals of European descent. As a consequence, a non-European user of TheHonestGene should take our predictions with a grain of salt.</p>
+                <div class="info-controls">
+                    <div>Progress: <span>{{state.task}} <paper-progress class="transiting" value="{{state.progress}}"></paper-progress></div>
+                    <div class="buttons">
+                        <paper-button id="previousBtn" on-tap="_onPreviousBtnClick"><iron-icon icon="icons:chevron-left" ></iron-icon>Imputation</paper-button>
+                        <paper-button id="cancelBtn" on-tap="_onCancelBtnClick"  hidden$="{{!isRunning}}"><iron-icon icon="icons:clear" ></iron-icon>Cancel</paper-button>
+                        <paper-button id="startBtn" on-tap="_onStartBtnClick" hidden$="{{isRunningOrFinished}}" ><iron-icon icon="icons:settings-power" ></iron-icon>Start Ancestry</paper-button>
+                        <paper-button id="nextBtn" on-tap="_onNextBtnClick" hidden$="{{!isFinished}}" style$="visibility:{{_getNextBtnVisibility(isFinished)}}">Risk prediction<iron-icon icon="icons:chevron-right" ></iron-icon></paper-button>
+                    </div>
+                </div>
+            </thg-info-card>
+            <div id="chartcontainer" class="chartcontainer">
+                <google-chart id="chart"
+                    type='scatter'
+                    options="[[options]]""
+                    data = "{{_computeDataSource(datasource)}}"
+                </google-chart>
+            </div>
+        </section>
+    </template>
+  <script>
+    (function() {
+      'use strict';
+      
+      
+      var emptyDataSource = [['PC1','East Asian','African','Admixed American']];
+      for (let i=0;i<200;i++) {
+          emptyDataSource.push([Math.random(),Math.random(),Math.random(),Math.random()]);
+      }
+      
+      var defaultOptions = {
+          title: "What is your genetic ancestry?", 
+          dataOpacity:0.5, 
+          hAxis: {
+              gridlines:{
+                  count:0
+                }, 
+                title: "PC1",
+                titleTextStyle: {
+                  color: 'black'
+                 },
+                
+          },
+          vAxis: {
+              gridlines:{
+                  count:0
+              },
+              titleTextStyle: {
+                color: 'black'
+              },
+              title: "PC2"
+          },
+          enableInteractivity:false,
+          pointSize:3,
+          series:{
+              5:{
+                  color:"black", 
+                  pointShape:"star",
+                  pointSize:20,
+                  dataOpacity:1.0
+                }
+            },
+            animation: {
+                duration:1000,
+                easing: 'inAndOut',
+                //startup: true,
+            }, 
+        };
+        
+        const popMap = {
+            EUR: {name: 'European',color:'#3366cc'},
+            EAS: {name: 'East Asian',color:'#dc3912'},
+            AFR: {name: 'African',color:'#109618'},
+            AMR: {name: 'Admixed American',color:'#990099'},
+            SAS: {name: 'South Asian',color:'#ff9900'},
+            YOU: {name: "That's you",color:'black'},
+        };
+        
+     
+        var emptyOptions = Object.assign({},defaultOptions);
+        emptyOptions.colors = ['#ccc','#ccc','#ccc'];
+        emptyOptions.title='Analysis is running...';
+        emptyOptions.vAxis.titleTextStyle.color='#ccc';
+        emptyOptions.hAxis.titleTextStyle.color='#ccc';
+        delete emptyOptions.animation;
+      
+      Polymer({
+        is: 'thg-ancestry',
+        behaviors: [Polymer.NeonAnimatableBehavior, Polymer.IronResizableBehavior,ReduxBehavior ],
+        
+        properties: {
+            animationConfig: {
+                value: function() {
+                return {
+                    'entry': [
+                    {
+                    name: 'scale-up-animation',
+                    node: this.$.infocard
+                    },
+                    {
+                        name: 'fade-in-animation',
+                        node: this.$.chartcontainer,
+                    }],
+                    'exit': [
+                    {
+                    name: 'scale-down-animation',
+                    node: this.$.infocard
+                    },
+                    {
+                        name: 'fade-out-animation',
+                        node: this.$.chartcontainer,
+                    }],
+                };
+            },
+          }, 
+          data: {
+              type:Object,
+              statePath: function(state){ return state.id in state.analyses ? state.analyses[state.id].ancestryStep.data:null}
+          },
+          state: {
+            type: String,
+            statePath: function(state){ return state.id in state.analyses ? state.analyses[state.id].ancestryStep.state:undefined}
+           },
+           genotypeData: {
+             type: Object,
+             statePath: function(state){ return state.id in state.analyses ? state.analyses[state.id].genotypeStep.data:null}
+           },
+           isFinished: {
+              type: Boolean,
+              computed:'_isFinished(state.state)'
+          },
+          isRunning: {
+            type:Boolean,
+            computed: '_isRunning(state.state)',
+          },
+          isRunningOrFinished: {
+            type:Boolean,
+            computed: '_isRunningOrFinished(isRunning,isFinished)',
+          },
+          options: {
+            type: Object,
+            value: function() { return emptyOptions;},
+            computed: '_computeOptions(datasource)'
+          },
+          datasource : {
+              type:Object,
+              value: function() { return emptyDataSource;},
+          },
+          
+        },
+        observers:[
+           '_fetchDataForPcs(genotypeData,data)'
+        ],
+        listeners: {
+          'iron-resize': '_onIronResize',
+          'google-chart-ready':"_onRenderChart",
+        },
+         _isFinished: function(state) {
+           return state === 'FINISHED';
+        }, 
+        _isRunning: function(state) {
+          return state === 'RUNNING';
+        },
+        _isRunningOrFinished: function(isRunning,isFinished) {
+            return isFinished || isRunning;
+        },
+        _getNextBtnVisibility: function(isFinished) {
+          return isFinished ? 'visible' : 'hidden';
+        },
+        actions: {
+            changePage: function(page) {
+                return { 
+                    type: 'CHANGE_UPLOAD_PAGE',
+                    page:page
+                };
+            }
+          },
+          _onPreviousBtnClick: function() {
+            this.dispatch({type:'CHANGE_STEP',backward:true});
+           },
+            _onNextBtnClick: function() {
+                this.dispatch({type:'CHANGE_STEP'});
+            },
+            _onCancelBtnClick: function() {
+             let id = this.getState().id;
+              if (id) {
+                  ga('send', 'event', 'Ancestry', 'cancel');
+                  this.dispatch({type: 'CANCEL_ANALYSIS',analysisType:'ancestry',id})
+                  this.fire('display-toast',{'text':'Stopping ancestry...'});
+              }
+           },
+           _onStartBtnClick: function(e) {
+              ga('send', 'event', 'Ancestry', 'start');
+              this.dispatch({type:'RUN_ANALYSIS',analysisType:'ancestry'})
+           },
+           _computeOptions: function(data) {
+               if (data !== emptyDataSource) {
+                let options = {...defaultOptions};
+                let series = {...options.series};
+                for (let i=0;i<data[0].length-2;i++) {
+                    series[i] = {color:popMap[data[0][i+1]].color};
+                }
+                options.series = series;
+                return options;
+              }
+              return emptyOptions;
+           },
+          _computeDataSource: function(data) {
+              if (data !== emptyDataSource) {
+                for (let i=1;i<data[0].length;i++) {
+                    data[0][i] = popMap[data[0][i]].name;
+                }
+                return data;
+              }
+              return emptyDataSource;
+          },
+          _onRenderChart: function(e) {
+                if (Polymer.dom(this).classList.contains('iron-selected')) {
+                    let chart = Polymer.dom(e).path[2];
+                    chart.style.visibility = 'visible';
+                }
+           },
+          _onIronResize: function() {
+               if (Polymer.dom(this).classList.contains('iron-selected')) {
+                  this.debounce('redraw', function () {
+                      this.$.chart.redraw();
+                  });
+               }
+          },
+          _fetchDataForPcs: function(genotypeData,data) {
+              this.debounce('plotpcs', ()=> { 
+                if (data && data.pc1 && data.pc2 && genotypeData) {
+                    const pc1 = data.pc1;
+                    const pc2 = data.pc2;
+                    let platform = genotypeData.source;
+                    if (genotypeData.version && genotypeData.version !== '') { 
+                        platform += '_'+genotypeData.version;
+                    }
+                    loadPcsData(platform,pc1,pc2).then((data) =>{
+                        this.datasource = data;
+                    });
+                }
+                else {
+                    this.datasource = emptyDataSource;
+                }
+              });
+            }
+          
+      });
+    })();
+  </script>
+</dom-module>
+

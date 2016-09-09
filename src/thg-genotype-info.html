@@ -4,8 +4,10 @@
 <link rel="import" href="../bower_components/neon-animation/neon-shared-element-animatable-behavior.html">
 <link rel="import" href="../bower_components/paper-material/paper-material.html">
 <link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
 <link rel="import" href="polymer-redux-store.html">
 <link rel="import" href="thg-animated-card.html">
+<link rel="import" href="thg-info-card.html">
 
 
 <dom-module id="thg-genotype-info">
@@ -73,21 +75,13 @@
     </style>
     <template strip-whitespace>
         <section>
-            <paper-material elevation="1" class="infocard" id="infocard">
-                <div class="top">
-                    <div class="step">
-                        <img src="/images/dna-icon.png">
-                    </div>
-                    <div class="description">
-                        <h2>1. Genetic data</h2>
-                        <p>Individuals differ in the composition of their DNA sequences and such differences can be of many different types. Biotechnology companies are typically interested in the simplest type of such differences, the so-called point mutations or single nucleotide polymorphisms (SNPs). Point mutations are changes of a single DNA letter at a time. A letter can mutate to a different letter or it can be inserted into/deleted from the original DNA sequence. The user’s genetic data are essentially long lists of such point mutations accompanied by chromosomal coordinates.<br>
-    Under normal circumstances, each individual bears two non-identical copies of each of 22 chromosomes, as well as two sex chromosomes – two X chromosomes in the case of females, and one X and one Y in the case of males. When a point mutation is identical on both chromosome copies, the individual is said to be "homozygous" for that position; when the two copies differ, then the individual is said to be "heterozygous" for that position. Homozygosity and heterozygosity are useful reflections of variability and inbreeding status in a population.
-                        </p>
-                    </div>
-                </div>
-                <div class="controls">
+            <thg-info-card image="/images/dna-icon.png" title="1. Genetic data" id="infocard" class="infocard">
+                <p class="info-content">Individuals differ in the composition of their DNA sequences and such differences can be of many different types. Biotechnology companies are typically interested in the simplest type of such differences, the so-called point mutations or single nucleotide polymorphisms (SNPs). Point mutations are changes of a single DNA letter at a time. A letter can mutate to a different letter or it can be inserted into/deleted from the original DNA sequence. The user’s genetic data are essentially long lists of such point mutations accompanied by chromosomal coordinates.<br>
+Under normal circumstances, each individual bears two non-identical copies of each of 22 chromosomes, as well as two sex chromosomes – two X chromosomes in the case of females, and one X and one Y in the case of males. When a point mutation is identical on both chromosome copies, the individual is said to be "homozygous" for that position; when the two copies differ, then the individual is said to be "heterozygous" for that position. Homozygosity and heterozygosity are useful reflections of variability and inbreeding status in a population.
+                </p>
+                <div class="info-controls">
                     <div hidden$="{{isFinished}}">Progress: <span>Uploading... <paper-progress class="transiting" value="{{state.progress}}"></paper-progress></div>
-                <div hidden$="{{!isFinished}}">Total number of genetic positions (loci) available: <span>{{numberofsnps}}</span></div>
+                    <div hidden$="{{!isFinished}}">Total number of genetic positions (loci) available: <span>{{numberofsnps}}</span></div>
                     <div class="buttons">
                         <a href="/#/start/"><paper-button hidden$="{{isAnalysisRunning}}"><iron-icon icon="icons:chevron-left" ></iron-icon>Start</paper-button></a>
                         <paper-button id="nextBtn" on-tap="_onNextBtnClick" style$="visibility:{{_getNextBtnVisibility(isFinished)}}">Imputation
@@ -95,8 +89,7 @@
                         </paper-button>
                     </div>
                 </div>
-                </div>
-            </paper-material>
+            </thg-info-card>
             <div class="chartcontainer" id="chartcontainer">
                <thg-animated-card axis="x" header="Number of genetic loci per chromosome">
                     <google-chart class="front" id="numberOfSNPsChart" type="column" data="{{dataForNumberOfSnps}}" options="{{_getChartOptionsForNumberOfSNPs(dataForNumberOfSnps)}}"></google-chart>

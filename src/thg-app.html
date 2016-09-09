@@ -27,6 +27,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="thg-view404.html">
 <link rel="import" href="thg-router.html">
 <link rel="import" href="thg-genotype.html">
+<link rel="import" href="thg-imputation.html">
+<link rel="import" href="thg-ancestry.html">
+<link rel="import" href="thg-predictions.html">
 
 <dom-module id="thg-app">
   <template>
@@ -50,10 +53,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         padding: 10px;
         @apply(--layout-vertical);
         @apply(--layout-flex);
-        height:100%;
+        min-height:0;
       }
       .main {
         height:100%;
+        @apply(--layout-horizontal);
+        overflow-x:hidden;
+        overflow-y:auto;
       }
 
       #pages {
@@ -79,9 +85,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <neon-animated-pages attr-for-selected="data-route" id="pages" selected="{{page}}" on-display-toast="onDisplayToastMessage" fallbackSelection="view404">
             <thg-start id="startPage" on-open-consent-dialog="_onOpenConsentDialog" on-open-delete-dialog="_onOpenDeleteDialog" data-route="start"></thg-start>
             <thg-genotype-page data-route="genotype"></thg-genotype-page>
-            <hg-imputation-page data-route="imputation"></hg-imputation-page>
-            <hg-ancestry-page data-route="ancestry"></hg-ancestry-page>
-            <hg-predictions-page data-route="predictions"></hg-predictions-page>
+            <thg-imputation data-route="imputation"></thg-imputation>
+            <thg-ancestry data-route="ancestry"></thg-ancestry>
+            <thg-predictions data-route="predictions"></thg-predictions>
             <thg-view404 data-route="view404"></thg-view404>
             <thg-view500 data-route="view500"></thg-view500>
           </neon-animated-pages>
@@ -162,6 +168,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         },
 
+        listeners: {
+          'display-error':"onDisplayToastMessage",  
+        },
+
         _pageChanged: function(page) {
           // Load page import on demand. Show 404 page if fails
           var resolvedPageUrl = this.resolveUrl('thg-' + page + '.html');
@@ -192,6 +202,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         _onOpenDeleteDialog: function(e) {
           this.$.deleteDialog.analysisId = e.detail;
           this.$.deleteDialog.open();
+        },
+        displayError: function(msg) {
+          this.$.toast.text = msg;
+          this.$.toast.show();  
+        },
+        onDisplayToastMessage: function(e) {
+           this.displayError(e.detail.text);  
         }
       });
     })();

@@ -4,7 +4,10 @@
   "fragments": [
     "src/thg-view404.html",
     "src/thg-start.html",
-    "src/thg-genotype.html"
+    "src/thg-genotype.html",
+    "src/thg-imputation.html",
+    "src/thg-ancestry.html",
+    "src/thg-predictions.html"
   ],
   "sourceGlobs": [
    "src/**/*",

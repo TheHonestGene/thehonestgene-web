@@ -7,7 +7,9 @@
 <link rel="import" href="../../../bower_components/neon-animation/animations/scale-down-animation.html">
 <link rel="import" href="../../../bower_components/paper-material/paper-material.html">
 <link rel="import" href="../../shared-styles.html">
+<link rel="import" href="../../thg-info-card.html">
 <link rel="import" href="thg-file-uploader.html">
+
 
 <dom-module id="thg-file-upload">
   <style include="shared-styles">
@@ -29,20 +31,14 @@
   }
   </style>
   <template>
-      <paper-material elevation="1" class="infocard" id="infocard">
-          <div class="step">
-               <img src="/images/dna-icon.png">
-          </div>
-          <div class="description">
-              <h2>File Upload</h2>
-                <p>Select or drag and drop a file containing your genetic data on the dropzone below. We support various file formarts from
-                    different companies (<a href="https://www.23andme.com/en-int/" target="_blank">23andMe</a>, <a href="http://dna.ancestry.com/" target="_blank">AncestryDNA</a>, <a href="https://www.familytreedna.com/" target="_blank">FamilyTreeDNA</a>).
-                    TheHonestGene will validate the file and display any issues. The user can then start the analysis by clicking on the “Upload” button.</p>
-               <div class="controls">
-                    <paper-button on-tap="_close"><iron-icon class="big"   icon="arrow-back" ></iron-icon> Back</paper-button>
-               </div>
-          </div>
-      </paper-material>
+      <thg-info-card image="/images/dna-icon.png" title="File Upload" id="infocard" class="infocard">
+        <p class="info-content">Select or drag and drop a file containing your genetic data on the dropzone below. We support various file formarts from
+            different companies (<a href="https://www.23andme.com/en-int/" target="_blank">23andMe</a>, <a href="http://dna.ancestry.com/" target="_blank">AncestryDNA</a>, <a href="https://www.familytreedna.com/" target="_blank">FamilyTreeDNA</a>).
+            TheHonestGene will validate the file and display any issues. The user can then start the analysis by clicking on the “Upload” button.</p>
+        <div class="info-controls">
+            <paper-button on-tap="_close"><iron-icon class="big"   icon="arrow-back" ></iron-icon> Back</paper-button>
+        </div>
+      </thg-info-card>
       <div class="container" id="dropzonecontainer">
         <thg-file-uploader id="upload" url="/api/genotype"></thg-file-uploader>
       </div>

@@ -1,0 +1,377 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/google-chart/google-chart.html">
+<link rel="import" href="../bower_components/paper-progress/paper-progress.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../bower_components/neon-animation/neon-animatable-behavior.html">
+<link rel="import" href="polymer-redux-store.html">
+<link rel="import" href="thg-animated-card.html">
+<link rel="import" href="thg-info-card.html">
+
+<dom-module id="thg-imputation" >
+  <style include="shared-styles">
+    :host {
+        
+    }
+
+    * {
+        box-sizing:border-box;
+    }
+
+    paper-progress {
+      --paper-progress-height:20px;
+    }
+    google-chart {
+        width:100%;
+        height:100%;
+        visibility: hidden;
+    }
+    h2 {
+        text-align:center;
+    }
+    .buttons {
+        @apply(--layout-horizontal);
+        @apply(--layout-self-end);
+
+    }
+    .chart {
+        @apply(--layout-flex);
+        @apply(--layout-vertical);
+    }
+    section {
+        @apply(--layout-vertical);
+        @apply(--layout-flex);
+    }
+    .chartContainer {
+        @apply(--layout-vertical);
+        @apply(--layout-flex);
+        margin-top:5px;
+    }
+    thg-animated-card {
+          min-height:300px;
+          margin-top:10px;
+    }
+    #accuracyLabel {
+      position:absolute;
+      font-size:24px;
+    }
+  </style>
+  <template>
+      <section>
+        <thg-info-card image="/images/dna-icon.png" title="2. Data conversion & Imputation" id="infocard" class="infocard">
+            <p class="info-content">Sometimes, information is missing from the genetic data of a particular individual due to limitations in the technology used for producing the data in the first place. Missing information can be thought of as gaps in an otherwise complete list of data points. Fortunately, it is fairly easy to fill in such gaps using other individuals as reference – individuals for which the complete data are available. This process is called genetic imputation. Our genetic prediction methods require genetic data that are denser than the data provided by the user and this is where imputation comes into play.</p>
+            <div class="info-controls">
+                <div>Progress: <span>{{state.task}} <paper-progress class="transiting" value="{{state.progress}}"></paper-progress></div>
+                <div class="buttons">
+                    <paper-button id="previousBtn" on-tap="_onPreviousBtnClick"><iron-icon icon="icons:chevron-left" ></iron-icon>Genotype</paper-button>
+                    <paper-button id="cancelBtn" on-tap="_onCancelBtnClick" hidden$="{{!isRunning}}"><iron-icon icon="icons:clear" ></iron-icon>Cancel</paper-button>
+                    <paper-button id="startBtn" on-tap="_onStartBtnClick" hidden$="{{isRunningOrFinished}}" ><iron-icon icon="icons:settings-power" ></iron-icon>Start Imputation</paper-button>
+                    <paper-button id="nextBtn" on-tap="_onNextBtnClick" hidden$="{{!isFinished}}" style$="visibility:{{_getNextBtnVisibility(isFinished)}}">Ancestry<iron-icon icon="icons:chevron-right"></iron-icon></paper-button>
+                </div>
+            </div>
+        </thg-info-card>
+        <div id="chartcontainer" class="chartContainer">
+            <thg-animated-card axis="x" header="Conversion stats" >
+                <google-chart class="front" id="conversionChart"  type="column" data="{{_getChartDataForConversion(isFinished,data)}}" options="{{_getChartOptionsForConversion(isFinished,data)}}"></google-chart>
+                <p class="back">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+            </thg-animated-card>
+            <thg-animated-card axis="x" header="Imputation stats" >
+                <google-chart class="front" id="imputationChart"  type="column" data="{{_getChartDataForImputation(isFinished,data)}}" options="{{_getChartOptionsForImputation(isFinished,data)}}"></google-chart>
+                <p class="back">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+            </thg-animated-card>
+            <thg-animated-card axis="x" header="Imputation accuracy" >
+                <div class="front">
+                  <google-chart class="front" id="pieChart" type="pie" data="{{_getChartDataForAccuracy(isFinished,data)}}" options="{{_getChartOptionsForAccuracy(isFinished,data)}}"></google-chart>
+                  <span id="accuracyLabel">{{_getAccuracy(isFinished,data)}}</span>
+                </div>
+                <p class="back">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+            </thg-animated-card>
+
+         </div>
+       </section>
+  </template>
+  <script>
+  (function() {
+
+    var emptyChartOptionsForConversion = {
+        bar: { groupWidth: '75%' },
+        title: "Imputation is running...",
+        isStacked: 'percent',
+        colors: ['#ccc','#ccc','#ccc'],
+        enableInteractivity:false,
+        hAxis: {
+            textStyle: {color:'#ccc'}
+        },
+        vAxis: {
+            textStyle: {color:'#ccc'},
+            title: '% of SNPs',
+            titleTextStyle: {
+                color: '#ccc'
+            }
+        },
+    }
+
+    var emptyChartOptionsForImputation = {
+        title: "Imputation is running...",
+        colors: ['#ccc'],
+        enableInteractivity:false,
+        hAxis: {
+            textStyle: {color:'#ccc'}
+        },
+        vAxis: {
+            textStyle: {color:'#ccc'},
+            title: '# of SNPs',
+            titleTextStyle: {
+                color: '#ccc'
+            }
+        },
+    }
+
+    var generateEmptyChartDataForConversion = function() {
+        var data = [['Chr', 'Parsed', 'Not found', 'Unknown']];
+        for (var i =0;i<23;i++) {
+            data.push(['Chr'+i,20695,5000,500])
+        }
+        return data;
+    }
+
+     var generateEmptyChartDataForImputation= function() {
+        var data = [['Chr', 'Imputed SNPs']];
+        for (var i =0;i<23;i++) {
+            data.push(['Chr'+i,5])
+        }
+        return data;
+    }
+    var emptyChartDataForImputation = generateEmptyChartDataForImputation();
+    var emptyChartDataForConversion = generateEmptyChartDataForConversion();
+
+    Polymer({
+      is: 'thg-imputation',
+
+      behaviors: [  Polymer.NeonAnimatableBehavior, Polymer.IronResizableBehavior, ReduxBehavior ],
+
+      properties: {
+        animationConfig: {
+            value: function() {
+              return {
+                'entry': [
+                {
+                  name: 'scale-up-animation',
+                  node: this.$.infocard
+                },
+                {
+                    name: 'fade-in-animation',
+                    node: this.$.chartcontainer,
+                }],
+                'exit': [
+                {
+                  name: 'scale-down-animation',
+                  node: this.$.infocard
+                },
+                {
+                    name: 'fade-out-animation',
+                    node: this.$.chartcontainer,
+                }],
+              };
+            },
+        },
+        data: {
+          type:Object,
+          statePath: function(state){ return state.id in state.analyses ? state.analyses[state.id].imputationStep.data:undefined}
+        },
+        state: {
+          type: String,
+          statePath: function(state){ return state.id in state.analyses ? state.analyses[state.id].imputationStep.state:undefined}
+        },
+        isFinished: {
+          type: Boolean,
+          computed:'_isFinished(state.state)'
+        },
+        isRunning: {
+          type:Boolean,
+          computed: '_isRunning(state.state)',
+        },
+        isRunningOrFinished: {
+          type:Boolean,
+          computed: '_isRunningOrFinished(isRunning,isFinished)',
+        }
+
+      },
+      listeners: {
+          'iron-resize': '_onIronResize',
+          'google-chart-ready':"_onRenderChart",
+        },
+      _isFinished: function(state) {
+          return state === 'FINISHED';
+      },
+      _isRunning: function(state) {
+          return state === 'RUNNING';
+      },
+      _isRunningOrFinished: function(isRunning,isFinished) {
+          return isFinished || isRunning;
+      },
+      _getChartOptionsForConversion: function(isFinished,data) {
+          if (!isFinished|| data === null) {
+              return emptyChartOptionsForConversion;
+          }
+          return {
+            title: data.convert.total_num_parsed_snps + ' SNPs parsed',
+            bar: { groupWidth: '75%' },
+            isStacked: 'percent',
+            animation:{
+                duration: 1000,
+                easing: 'out',
+                //startup: true,
+            },
+          }
+      },
+      _getChartDataForConversion: function(isFinished,data) {
+          if (!isFinished || data === null) {
+              return emptyChartDataForConversion;
+          }
+        var chrStats =  data.convert.chr_stats;
+        var chartData =  [];
+        var header = ['Chr', 'Parsed', 'Not found', 'Unknown'];
+        chartData.push(header);
+        let chrs = Object.keys(chrStats).sort((a,b)=> parseInt(a.substring(3))-parseInt(b.substring(3)));
+        for (let chr of chrs) {
+            var chrStat = chrStats[chr];
+            chartData.push([chr,chrStat['num_parsed_ok'],chrStat['num_not_found'],chrStat['num_misunderstood']])
+        }
+        return chartData;
+      },
+      _getChartDataForImputation: function(isFinished,data) {
+        if (!isFinished || data === null) {
+              return emptyChartDataForImputation;
+        }
+        var chrStats =  data.imputation.chr_stats;
+        var chartData =  [];
+        var header = ['Chr', 'Imputed SNPs'];
+        chartData.push(header);
+        let chrs = Object.keys(chrStats).sort((a,b)=> parseInt(a.substring(3))-parseInt(b.substring(3)));
+        for (let chr of chrs) {
+            var chrStat = chrStats[chr];
+            chartData.push([chr,chrStat])
+        }
+        return chartData;
+      },
+      _getChartOptionsForImputation: function(isFinished,data) {
+           if (!isFinished|| data === null) {
+              return emptyChartOptionsForImputation;
+          }
+          return {
+            title: data.imputation.num_imputed_snps + ' SNPs imputed',
+            animation:{
+                duration: 1000,
+                easing: 'out',
+                //startup: true,
+            },
+          }
+      },
+      _getNextBtnVisibility: function(isFinished) {
+          return isFinished ? 'visible' : 'hidden';
+      },
+     _getChartDataForAccuracy: function(isFinished,data) {
+        var pieData = [['accuracy', '%']];
+        if (!isFinished || data === null) {
+              pieData.push(['r2',0.5])
+              pieData.push(['incorrect',0.5])
+
+        }
+        else {
+            var r2 =  this._getRoundedR2Pred(data.imputation.pred_r2);
+            pieData.push(['r2',r2]);
+            pieData.push(['incorrect',1-r2])
+        }
+        return pieData;
+
+      },
+      _getAccuracy: function(isFinished,data) {
+         if (data) {
+            return this._getRoundedR2Pred(data.imputation.pred_r2)*100 +" %";
+         }
+      },
+      _getRoundedR2Pred: function(r2) {
+        return Math.round(r2*100)/100
+      },
+      _getChartOptionsForAccuracy: function(isFinished,data) {
+           if (!isFinished|| data === null) {
+              return  {
+                title: 'Imputation is running...',
+                pieHole:0.4,
+                legend:'none',
+                slices: {
+                  0:{color:'#ccc'},
+                  1:{color:'#ccc'}
+                },
+                pieSliceText:'none',
+                enableInteractivity:false,
+                theme:'maximized',
+              }
+          }
+          var r2 = this._getRoundedR2Pred(data.imputation.pred_r2);
+          return {
+
+            title: 'r2 Imputation Accuracy: ' + r2+ ' ('+r2*100+' %)',
+            pieHole:0.4,
+            legend:'none',
+            pieSliceText:'none',
+            enableInteractivity:false,
+            slices: {
+                1:{color:'#ccc'},
+            },
+            animation:{
+                duration: 1000,
+                easing: 'out',
+                //startup: true,
+            },
+            theme:'maximized',
+          }
+      },
+    _onPreviousBtnClick: function() {
+         this.dispatch({type:'CHANGE_STEP',backward:true});
+     },
+     _onNextBtnClick: function() {
+         this.dispatch({type:'CHANGE_STEP'});
+     },
+     _onCancelBtnClick: function() {
+       let id = this.getState().id;
+       if (id) {
+         ga('send', 'event', 'Imputation', 'cancel');
+         this.dispatch({type: 'CANCEL_ANALYSIS',analysisType:'imputation',id})
+         this.fire('display-toast',{'text':'Stopping imputation...'});
+       }
+     },
+     _onStartBtnClick: function(e) {
+        ga('send', 'event', 'Imputation', 'start');
+        this.dispatch({type:'RUN_ANALYSIS',analysisType:'imputation'})
+     },
+     _onRenderChart: function(e) {
+         if (Polymer.dom(this).classList.contains('iron-selected')) {
+             let chart = Polymer.dom(e).path[2];
+             chart.style.visibility = 'visible';
+             if (chart === this.$.pieChart) {
+               this._positionDonutLabel();
+             }
+         }
+     },
+     _positionDonutLabel: function() {
+        let box = this.$.pieChart._chart.getChartLayoutInterface().getChartAreaBoundingBox();
+        let accuracyLabel = this.$$('#accuracyLabel');
+        accuracyLabel.style.top=  box.top + 58 + box.height/2+"px";
+        accuracyLabel.style.left= box.left - 17 +box.width/2 + "px";
+     },
+      _onIronResize: function() {
+          if (Polymer.dom(this).classList.contains('iron-selected')) {
+            this.debounce('redraw', function () {
+                this.$.pieChart.redraw();
+                this.$.imputationChart.redraw();
+                this.$.conversionChart.redraw();
+            });
+          }
+
+       }
+    });
+  })();
+  </script>
+</dom-module>

@@ -1,0 +1,96 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-material/paper-material.html">
+
+
+
+<dom-module id="thg-info-card">
+    <style>
+      paper-material {
+         @apply(--layout-vertical)
+         padding:20px;
+      }
+
+     .step {
+         padding:8px;
+         text-align:center;
+      }
+
+     .step img {
+          width:50px;
+          height:50px;
+      }
+
+
+     .top {
+        @apply(--layout-horizontal)
+      }
+
+     .description {
+          @apply(--layout-flex);
+          @apply(--layout-vertical);
+          @apply(--layout-center-justified);
+          padding:5px;
+      }
+      .description h2 {
+          margin: 5px;
+          text-align:start;
+          @apply(--paper-font-headline);
+       }
+       .description .content ::content > p {
+          margin: 5px;
+          @apply(--paper-font-body1);
+       }
+       /*.controls {
+          border-top: 1px solid #e8e8e8;
+          padding:5px;
+          @apply(--layout-vertical);
+          @apply(--layout-justified);
+          @apply(--layout-center);
+       }*/
+
+      @media (min-width: 960px) {
+        .step {
+           padding:20px;
+           text-align:center;
+        }
+        .step img {
+          width:inherit;
+          height:inherit;
+        }
+
+        /*.controls {
+          @apply(--layout-horizontal);
+        }*/
+      }
+
+    </style>
+    <template>
+        <paper-material elevation="1">
+            <div class="top">
+                <div class="step">
+                    <img src$="[[image]]">
+                </div>
+                <div class="description">
+                    <h2>[[title]]</h2>
+                    <div class="content">
+                        <content select=".info-content"></content>
+                    </div>
+                </div>
+            </div>
+            <div class="controls">
+                <content select='.info-controls'></content>
+            </div>
+        </paper-material>
+    </template>
+    <script>
+        Polymer({
+            is: 'thg-info-card',
+
+
+            properties: {
+                title: String,
+                image: String
+            }
+        });
+    </script>
+</dom-module>

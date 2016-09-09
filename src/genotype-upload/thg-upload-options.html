@@ -2,24 +2,29 @@
 <link rel="import" href="../../bower_components/neon-animation/neon-shared-element-animatable-behavior.html">
 <link rel="import" href="../../bower_components/neon-animation/animations/hero-animation.html">
 <link rel="import" href="../../bower_components/neon-animation/animations/scale-up-animation.html">
+<link rel="import" href="../../bower_components/neon-animation/animations/fade-in-animation.html">
+<link rel="import" href="../../bower_components/neon-animation/animations/fade-out-animation.html">
 <link rel="import" href="../../bower_components/neon-animation/animations/scale-down-animation.html">
 <link rel="import" href="../../bower_components/neon-animation/animations/cascaded-animation.html">
 <link rel="import" href="../../bower_components/neon-page-behavior/neon-page-behavior.html">
 <link rel="import" href="../../bower_components/paper-material/paper-material.html">
 <link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout.html">
 <link rel="import" href="../shared-styles.html">
+<link rel="import" href="../thg-info-card.html">
+
 
 <dom-module id="thg-upload-options">
     <style include="shared-styles">
         :host {
-            /*@apply(--layout-flex);
-            @apply(--layout-vertical);*/
+            @apply(--layout-vertical);
         }
 
         .options {
             @apply(--layout-horizontal);
             @apply(--layout-around-justified);
             @apply(--layout-center);
+            @apply(--layout-flex);
+
         }
 
         .container {}
@@ -49,15 +54,9 @@
         }
     </style>
     <template>
-        <paper-material elevation="1" class="infocard" id="infocard">
-            <div class="step">
-                <img src="/images/dna-icon.png">
-            </div>
-            <div class="description">
-                <h2>1. Genetic data</h2>
-                <p>In order to start an analysis, the user has to provide their genetic data. TheHonestGene currently supports this in two ways: (i) uploading the genetic data as a file or (i) transferring them automatically from one of the third-party companies where the user has an active account.</p>
-            </div>
-        </paper-material>
+        <thg-info-card title="1. Genetic data" id="infocard" image="/images/dna-icon.png">
+            <p class="info-content">In order to start an analysis, the user has to provide their genetic data. TheHonestGene currently supports this in two ways: (i) uploading the genetic data as a file or (i) transferring them automatically from one of the third-party companies where the user has an active account.</p>
+        </thg-info-card>
         <section class="options">
             <paper-material elevation="1" class="card" id="file" on-tap="_onTap">
                 <iron-icon class="upload_icon" icon="file-upload"></iron-icon>

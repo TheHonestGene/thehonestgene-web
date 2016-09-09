@@ -183,7 +183,8 @@ gulp.task('serve', gulp.series('dev', function() {
     server: {
       baseDir: ['build/unbundled'],
       middleware: [proxy],
-    }
+    },
+    open: false
   });
 
 

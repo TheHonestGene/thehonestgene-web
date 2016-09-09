@@ -7,6 +7,7 @@
 <link rel="import" href="../../../bower_components/neon-animation/animations/scale-up-animation.html">
 <link rel="import" href="../../../bower_components/neon-animation/animations/scale-down-animation.html">
 <link rel="import" href="../../../bower_components/neon-animation/animations/cascaded-animation.html">
+<link rel="import" href="../../thg-info-card.html">
 <link rel="import" href="thg-cloud-provider-card.html">
 
 <dom-module id="thg-cloud-options">
@@ -27,19 +28,13 @@
         }
     </style>
     <template>
-        <paper-material elevation="1" class="infocard" id="infocard">
-            <div class="step">
-                <img src="/images/dna-icon.png">
-            </div>
-            <div class="description">
-                <h2>Cloud Upload</h2>
-                <p>The Cloud upload provides a convenient way of accessing genetic data directly from a third-party company. By clicking on one of the cloud providers below, a pop-up window will open allowing the users to authenticate themselves and provide permissions to TheHonestGene to access their genetic data.</p>
-                <div class="controls">
-                    <paper-button on-tap="_close">
-                        <iron-icon class="big" icon="arrow-back"></iron-icon> Back</paper-button>
-                </div>
-            </div>
-        </paper-material>
+        <thg-info-card image="/images/dna-icon.png" title="Cloud Upload" id="infocard" class="infocard">
+          <p class="info-content">The Cloud upload provides a convenient way of accessing genetic data directly from a third-party company. By clicking on one of the cloud providers below, a pop-up window will open allowing the users to authenticate themselves and provide permissions to TheHonestGene to access their genetic data.</p>
+          <div class="info-controls">
+              <paper-button on-tap="_close">
+                  <iron-icon class="big" icon="arrow-back"></iron-icon> Back</paper-button>
+          </div>
+        </thg-info-card>
         <section class="providers">
             <template is="dom-repeat" items="{{providers}}" on-dom-change="_providersChanged" sort="_sortProviders">
                <thg-cloud-provider-card class="provider" logo-url="{{item.logoUrl}}" on-tap="_onTapProvider"></thg-cloud-provider-card>

@@ -1,0 +1,251 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/neon-animation/neon-animatable-behavior.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="thg-risk-card.html">
+
+<dom-module id="thg-predictions">
+    <style include="shared-styles">
+    :host {
+        
+    }
+    .container  {
+        @apply(--layout-vertical);
+        @apply(--layout-flex);
+    }
+    paper-progress {
+        --paper-progress-height:20px;
+    }
+    .buttons {
+        @apply(--layout-horizontal);
+        @apply(--layout-self-end);
+    }
+    paper-tabs {
+        background-color:  var(--primary-color);
+        color: #fff;
+    }
+    .detail {
+        margin-top:20px;
+    }
+    iron-pages {
+    }
+   /* paper-card {
+        --paper-card-background-color:white;
+        max-width:400px;
+        max-height:445px;
+    }*/
+    thg-risk-card {
+        margin-top:10px;
+        height:364px;
+        width:100%;
+        max-width:400px;
+        @apply(--layout-vertical);
+        flex:1;
+        display:flex;
+        min-width:300px;
+        /* can't use because flex-basis:0.000000001px screws things up*/
+        
+        /*@apply(--layout-flex);*/
+    }
+
+    .traitcardcontainer {
+        @apply(--layout-horizontal);
+        @apply(--layout-wrap);
+        @apply(--layout-around-justified);
+    }
+    iron-pages {
+        padding:10px;
+    }
+     @media (min-width: 600px) {
+         thg-risk-card {
+             min-width:400px;
+         }
+     }
+    </style>
+    <template strip-whitespace>
+        <section class="container">
+            <thg-info-card image="/images/dna-icon.png" title="4. Traits & Predictions" id="infocard" class="infocard">
+                <p class="info-content">Genetic predictions typically include an initial training step in which a prediction algorithm of choice is trained on a large dataset of individuals with known trait status. Predictions are then made for new individuals with available genetic data but whose trait status is unknown. For the time being, TheHonestGene offers predictions for two traits: height and body mass index (BMI). Our algorithm’s training step is carried out on summarized genetic and phenotypic data coming from large open-access databases such as the GIANT Consortium. In the future, our platform will be extended to more traits contingent on public data availability. In the case of disease traits, the user will have the choice to opt out undesirable predictions.</p>
+                <div class="info-controls">
+                    <div></div>
+                    <div class="buttons">
+                        <paper-button id="cancelBtn" on-tap="_onCancelBtnClick" hidden$="{{!isRunningTraits}}"><iron-icon icon="icons:clear"></iron-icon>Cancel</paper-button>
+                        <paper-button id="previousBtn" on-tap="_onPreviousBtnClick"><iron-icon icon="icons:chevron-left" ></iron-icon>Ancestry</paper-button>
+                        <paper-button id="startBtn" on-tap="_onStartAnalysis" disabled$="{{!isSelectedTraits}}"><iron-icon icon="icons:settings-power" ></iron-icon>Start analysis</paper-button>
+                    </div>
+                </div>
+            </thg-info-card>  
+            <div id="detail" class="detail">
+                <section class="traitcardcontainer">
+                    <template is="dom-repeat" items="{{_getTraits(traits,selectedTraits)}}">
+                        <thg-risk-card trait="[[item]]" analysis="[[_getAnalysis(item.name,runningTraits)]]" on-selected-changed="_updateSelectedTraits" selected="[[_checkItemSelected(item,selectedTraits)]]"></thg-risk-card>
+                    </template>
+                </section>
+            </div>
+        </section>
+    </template>
+    <script>
+        (function() {
+            'use strict';
+            
+            Polymer({
+            is: 'thg-predictions',
+            behaviors: [Polymer.NeonAnimatableBehavior,  Polymer.IronResizableBehavior,ReduxBehavior ],
+            
+            properties: {
+                    animationConfig: {
+                value: function() {
+                    return {
+                    'entry': [
+                    {
+                        name: 'scale-up-animation',
+                        node: this.$.infocard,
+                    },
+                    {
+                        name: 'fade-in-animation',
+                        node: this.$.detail,
+                    }],
+                    'exit': [
+                    {
+                        name: 'scale-down-animation',
+                        node: this.$.infocard
+                    },{
+                        name: 'fade-out-animation',
+                        node: this.$.detail,
+                    }],
+                    };
+                },
+            }, 
+                selectedTraitView: {
+                    type: Number,
+                    value:0
+                },
+                traits: {
+                    type: Array,
+                    statePath:'traits',
+                }, 
+                isSelectedTraits : {
+                    type: Boolean,
+                    value: false,
+                    computed: '_containsItems(selectedTraits)'
+                },
+                selectedTraits: {
+                    type: Object,
+                    value: function() { return {};},
+                    statePath: function(state){ return state.id in state.analyses ? state.analyses[state.id].riskPredictionStep.selectedTraits:undefined} 
+                },
+                runningTraits: {
+                    type: Object,
+                    value: function() { return {};},
+                    statePath: function(state){ return state.id in state.analyses ? state.analyses[state.id].riskPredictionStep.runningAnalysis:undefined}
+                },
+                isRunningTraits: {
+                    type: Boolean,
+                    value:false,
+                    computed: '_containsItems(runningTraits)',
+                },
+            },
+            listeners: {
+                'iron-resize': '_onIronResize'
+            },
+            actions: {
+                selectTrait: function(name,isChecked) {
+                    return { 
+                        type: 'SELECT_TRAIT',
+                        name:name,
+                        isChecked: isChecked,
+                        id: this.getState().id,
+                        
+                    };
+                },
+                startAnalysis: function(traits) {
+                    return {
+                        type: 'START_PREDICTION',
+                        traits: traits,
+                        id: this.getState().id,
+                    }
+                }
+                },
+                _containsItems: function(items)  {
+                if (items && Object.keys(items).length > 0) {
+                    return true;
+                }  
+                return false;
+                },
+                _onPreviousBtnClick: function() {
+                    this.dispatch({type:'CHANGE_STEP',backward:true});
+                },
+                _onNextBtnClick: function() {
+                    this.dispatch({type:'CHANGE_STEP'});
+                },
+                _onCancelBtnClick: function() {
+                    let id = this.getState().id;
+                    if (id) {
+                    const traits = this._getRunningPredictions(id);
+                    for (let trait of traits) {
+                        ga('send', 'event', 'Prediction', 'cancel',trait);
+                    }
+                    this.dispatch({type: 'CANCEL_ANALYSIS',analysisType:'riskprediction',id,traits})
+                    this.fire('display-toast',{'text':'Stopping risk prediction...'});
+                    }
+                    
+                },
+                _onIronResize: function() {
+                    
+                },
+                _getRunningPredictions: function(id) {
+                    return Object.keys(this.getState().analyses[id].riskPredictionStep.runningAnalysis);
+                },
+                
+                _getAnalysis: function(name,runningTraits) {
+                    if (name in runningTraits) {
+                        return runningTraits[name]; 
+                    }  
+                    return undefined;
+                },
+                _getTraits: function(traits,selectedTraits) {
+                    return traits;
+                },
+                _getTraitsForGrid: function(traits,selectedTraits,runningTraits) { 
+                    let newTraits = [...traits];
+                    newTraits.map( tr => {
+                        if (tr.name in runningTraits) {
+                            let runningTrait = runningTraits[tr.name];
+                            if (runningTrait.state.state) {
+                            tr.progress = runningTrait.state.state + ' ('+runningTrait.state.progress+'%)';
+                            }
+                            if (runningTrait.data) {
+                            tr.risk = runningTrait.data.risk*100+'%';
+                            }
+                        } 
+                    });
+                    return newTraits;
+                },
+                _updateSelectedTraits: function(e) {
+                    if (e.model.item) {
+                        // FIXME REquired until bug with deselect is fixed
+                        this._fireSelectTraitAction(e.model.item,e.detail.value);
+                    }
+                },
+                _onStartAnalysis: function() {
+                    const traitKeys = Object.keys(this.selectedTraits);
+                    for (let key of traitKeys) {
+                        ga('send', 'event', 'Prediction', 'start',key);
+                    }
+                    this.dispatch('startAnalysis',traitKeys);  
+                },
+                _checkItemSelected: function(item,selectedTraits) {
+                    if (item.name in selectedTraits) {
+                        return true;
+                    }
+                    return false;
+                },
+                _fireSelectTraitAction: function(item,checked) {
+                    if (item && ((checked && !this._checkItemSelected(item,this.selectedTraits)) || (!checked && this._checkItemSelected(item,this.selectedTraits)))) {
+                        this.dispatch('selectTrait',item.name, checked);
+                    }
+                }
+                
+            });
+        })();
+    </script>
+</dom-module>

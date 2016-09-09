@@ -19,13 +19,15 @@
         @apply(--layout-flex);
     }
 
-    front {
+   /* front {
         overflow:hidden;
-    }
+    }*/
 
 
     front > div {
         @apply(--layout-vertical);
+         @apply(--layout-fit);
+        /*@apply(--layout-flex);*/
     }
 
     back > div {
@@ -42,6 +44,7 @@
 
     flip-card front,back {
         @apply(--shadow-elevation-2dp);
+        /*@apply(--layout-horizontal);*/
     }
     .header {
         @apply(--layout-horizontal);
@@ -56,11 +59,12 @@
         opacity:0.5;
     }
 
+
   </style>
   <template>
       <flip-card id="card" axis$="{{axis}}" nohover flipped="{{flipped}}">
           <front>
-            <div>
+            <div class="front">
               <div class="header"><h2>{{header}}</h2><iron-icon icon="icons:description" on-tap="_switchSides"></iron-icon></div>
               <content select=".front"></content>
             </div>

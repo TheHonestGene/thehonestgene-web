@@ -64,7 +64,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       // Setup Polymer options
       window.Polymer = {
-        dom: 'shadow',
+        // can't use shadow dom because risk prediction card needs to access individual svg inside shadow dom'
+        //dom: 'shadow',
         lazyRegister: true
       };
 
@@ -110,12 +111,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <link rel="import" href="/src/thg-app.html">
 
     <style>
+      html {
+        box-sizing: border-box;
+      }
       body {
         margin: 0;
         font-family: 'Roboto', 'Noto', sans-serif;
         line-height: 1.5;
         min-height: 100vh;
         background-color: white;
+      }
+      *, *:before, *:after {
+        box-sizing: inherit;
       }
     </style>
   </head>

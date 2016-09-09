@@ -1,0 +1,406 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-styles/typography.html">
+<link rel="import" href="../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../bower_components/flip-card/flip-card.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/iron-icons/editor-icons.html">
+<link rel="import" href="../bower_components/google-chart/google-chart.html">
+
+<dom-module id="thg-risk-card">
+  <style include="shared-styles">
+
+    * {
+        box-sizing:border-box;
+    }
+    :host {
+      
+    }
+    paper-card {
+        --paper-card-background-color:white;
+        max-width:400px;
+        @apply(--layout-vertical);
+        flex:1;
+        display:flex;
+        /* can't use because flex-basis:0.000000001px screws things up*/
+        
+        /*@apply(--layout-flex);*/
+    }
+    google-chart {
+        height:250px;
+        width:100%;
+    }
+      paper-progress {
+      --paper-progress-height:20px;
+    }
+    .progress paper-progress.error {
+        --paper-progress-active-color: var(--paper-red-500);
+    }
+    
+    .progress paper-progress.canceled {
+        --paper-progress-active-color: var(--paper-yellow-500);
+    }
+    
+    
+    paper-card .header {
+       @apply(--paper-font-headline); 
+    }
+    paper-card .header img {
+        width:50px;
+        height:50px;
+        vertical-align:middle;
+    }
+    paper-card .infos {
+         display:flex;
+         flex:1;
+        /* can't use because flex-basis:0.000000001px screws things up*/
+        
+        /*@apply(--layout-flex);*/
+        @apply(--layout-vertical);
+    }
+    
+    paper-card .card-content {
+        flex:1;
+        @apply(--layout-vertical);
+       /* can't use because flex-basis:0.000000001px screws things up*/
+       /*@apply(--layout-flex);*/
+    }
+    .card-content p {
+        @apply(--paper-font-body1);
+        overflow:auto;
+    }
+    
+    paper-card .card-actions {
+        @apply(--layout-horizontal);
+        @apply(--layout-justified);
+        @apply(--layout-end);
+    }
+    
+    flip-card front, flip-card back {
+        display:flex !important;
+    }
+    
+    paper-card .card-actions {
+        padding:10px 16px !important;
+    }
+    iron-icon {
+        opacity:0.5;
+        cursor:pointer;
+    }
+    .stats {
+        position: relative;
+    }
+    #riskLabel {
+        position:absolute;
+        z-index:9999;
+        font-size:12px;
+        color: #D50000;
+        white-space:nowrap;
+        @apply(--layout-vertical);
+    }
+    
+    #riskLabel iron-icon { 
+        cursor:initial;
+        opacity:1;
+        width:12px;
+        height:12px;
+    }
+    
+    .relative-risk {
+        @apply(--paper-font-body1);
+    }
+    
+    .relative-risk span.relative-risk-score {
+        margin-left:5px;
+        color:var(--paper-red-900);
+        @apply(--paper-font-body1);
+    }
+    
+    .relative-risk paper-progress {
+        margin:2px 0;
+         --paper-progress-height:5px;
+    }
+    
+    .relative-risk paper-progress.user-risk {
+       --paper-progress-active-color: var(--paper-red-900)
+        
+    }
+    
+    .relative-risk paper-progress.mean-risk {
+       --paper-progress-active-color: var(--paper-blue-grey-500) 
+    }
+    .not-run-text {
+        @apply(--paper-font-caption)
+    }
+    .finished-text {
+       @apply(--paper-font-subhead) 
+    }
+    .finished-text  iron-icon{
+        color:var(--paper-green-900);
+        cursor:initial;
+    }
+    .finished-text span {
+        isplay: inline-block;
+        vertical-align: middle;
+        padding-left: 8px;
+        white-space: normal;
+        line-height: normal;
+    }
+    [hidden] {
+        display:none !important;
+    }
+  </style>
+  <template>
+      <flip-card id="card" nohover flipped="{{analysisFinished}}">
+          <front>
+            <paper-card animated-shadow elevation="{{_animateSelection(selected,analysisRunning,analysisFinished)}}">
+                 <div class="infos">
+                    <div class="card-content">
+                        <div class="header">
+                            <img src$="{{trait.logourl}}">
+                            <span>{{trait.title}}</span>
+                        </div>
+                        <p>{{trait.description}}</p>
+                    </div>
+                    <div class="card-actions">
+                        <div hidden$="{{analysisFinished}}">
+                            <paper-checkbox hidden$="{{analysisRunning}}" checked="{{selected}}"> Select for prediction</paper-checkbox>
+                            <div class="progress" hidden$="{{!analysisRunning}}">
+                                <div>Progress: <span>{{analysis.state.task}}</span></div>
+                                <paper-progress class$="{{_computeProgressBarClass(analysis.state)}}" value="{{analysis.state.progress}}"></paper-progress>
+                            </div>
+                        </div>    
+                        <div class="finished-text" hidden$="{{!analysisFinished}}">
+                            <iron-icon icon="icons:check-box"></iron-icon><span>Click on chart icon see results</span>
+                        </div>
+                        <div>
+                            <iron-icon icon="editor:insert-chart" on-tap="_switchSides"></iron-icon>
+                        </div>  
+                    </div>
+                </div>
+            </paper-card>
+        </front>
+        <back>
+            <paper-card >
+                <div class="card-content">
+                    <div class="header">
+                        <img src$="{{trait.logourl}}">
+                        <span>{{trait.title}}</span>
+                    </div>
+                    <div class="stats">
+                        <div id="riskLabel" hidden$="{{!analysisFinished}}">
+                            <span>{{_getRiskLabel(trait.quantitive,analysis.data.risk)}}</span>
+                            <iron-icon icon="icons:arrow-downward"></iron-icon>
+                        </div>
+                        <google-chart id="riskChart" type="histogram" data="{{dataTable}}" options="{{dataOptions}}"></google-chart>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <div></div>
+                    <div class="relative-risk" hidden$="{{!showRelativeRisk}}">
+                        <div><span>Relative Risk:</span><span class="relative-risk-score">{{_computeRelativeRisk(analysis.data.risk,trait.meanRisk)}}x</span> 
+                            <paper-progress class="transiting user-risk" value="{{percentageRisk}}"></paper-progress>
+                            <paper-progress class="transiting mean-risk" value="{{percentageMeanRisk}}"></paper-progress>
+                        </div>
+                    </div>
+                    <div class="not-run-text" hidden$="{{analysisFinished}}">Run prediction to see results</div>
+                    <iron-icon icon="icons:description" on-tap="_switchSides"></iron-icon>
+                </div>   
+            </paper-card>
+         </back>
+      </flip-card>
+  </template>
+  <script>
+    (function() {
+      'use strict';
+      
+      var OPTIONS = {
+                animation:{
+                    duration: 1000,
+                    easing: 'out',
+                    startup: true,
+                },
+                //width:368,
+                //height:250,
+                colors:['#ccc'],
+                legend: { position: 'none' },
+                chartArea: {width:321},
+                //hAxis: {
+                 // ticks: [0, 0.25, 0.5, 0.75, 1]
+               // },
+               vAxis:{
+                    baselineColor: '#fff',
+                    gridlineColor: '#fff',
+                    textPosition: 'none'
+                },
+                bar: { gap: 0, groupWidth:'100%' },
+                histogram: {
+                  hideBucketItems: true,
+                 //bucketSize: 0.001,
+                 // maxNumBuckets: 320,
+                 // minValue: -0.5,
+                 // maxValue: 1.5
+                },
+                dataOpacity: 0.6,
+                enableInteractivity: false,
+            };
+      
+      Polymer({
+        is: 'thg-risk-card',
+
+        behavior: [ Polymer.IronResizableBehavior ],
+        
+        properties: {
+            trait: {
+                type: Object,
+            },
+            selected: {
+                type: Boolean,
+                value:false,
+                notify: true,
+            }, 
+            analysis: {
+                type: Object,
+                value:null,
+            },
+            analysisRunning: {
+                type: Boolean,
+                value: false,
+                computed: '_isAnalysisRunning(analysis)',
+            },
+            showRelativeRisk: {
+                type:Boolean, 
+                value:false,
+                computed: '_showRelativeRisk(analysisFinished,trait.quantitive)'
+            }, 
+            percentageRisk: {
+                type:Number,
+                computed: '_convertToPercentage(analysis.data.risk)', 
+            },
+            percentageMeanRisk: {
+                type:Number,
+                computed: '_convertToPercentage(trait.meanRisk)',
+            },
+            analysisFinished: {
+                type: Boolean,
+                value: false,
+                computed: '_isAnalysisFinished(analysis)',
+            },
+            dataTable: {
+                type: Object,
+                computed: '_computeDataTable(trait,analysis)',
+            },
+            dataOptions: {
+                type: Object,
+                computed:'_computeDataOptions(trait,analysis)'
+            },
+        },
+        listeners: {
+           'iron-resize': '_onIronResize',
+          'google-chart-ready':"_onRenderChart",  
+        },
+        _animateSelection: function(selected,analysisRunning,analysisFinished) {
+           return (selected || analysisRunning || analysisFinished) ? 3 : 1;  
+        },
+        _isAnalysisRunning: function(analysis) {
+            return analysis ? true : false;
+        },
+        _isAnalysisFinished: function(analysis) {
+            if (!analysis) return false;
+            return analysis.state.state === 'FINISHED';  
+        },
+        _round: function(value) {
+            return Math.round(value*100)/100;
+        },
+        _convertToPercentage: function(risk) {
+            return Math.round(risk*1000)/10;  
+        },
+        _computeProgressBarClass: function(state) {
+            const classes = ['transiting']
+            if (state === 'ERROR') {
+                classes.push('error');
+            }
+            else if (state === 'CANCELED') {
+                classes.push('canceled');
+            }
+            return classes.join(' ');
+        },
+        _switchSides:function() {
+          ga('send', 'event', 'PredictionCard', 'flipped',this.trait.name);
+          this.$.card.toggle();  
+        },
+        _computeDataTable: function(trait,analysis) {
+            return trait.histogram;
+        },
+        _computeDataOptions: function(trait,analysis) {
+          let title = '';
+          if (trait.quantitive) {
+              title = `What is your genetically predicted ${trait.title} relative to the population?`;
+          } else {
+              title = `What is your predicted genetic risk for ${trait.title} relative to the population?`;
+          }      
+          let options = {...OPTIONS,title:title};      
+          if (analysis) {
+            options.colors =  ['#4285F4'];
+          }
+          let ticks = this._calculateTicks(trait.histogram);
+          options.hAxis = {
+             ticks: ticks, 
+          };
+          return options;
+        },
+        _getRiskLabel: function(quantitive,risk) {
+            if (!quantitive) { 
+                return 'Your risk ( '+this._convertToPercentage(risk)+' %)'
+            }
+            else {
+                return 'Your genetic prediction ('+this._round(risk)+')';
+            }  
+        },
+        _calculateTicks: function(histogram) {
+            const uniqueValues = Array.from(new Set(histogram.slice(1).map((a) => Math.round(a[0])).sort((a,b)=> a - b)));
+            const length = uniqueValues.length;
+            const ticks = [uniqueValues[0],uniqueValues[Math.ceil(length/4)],uniqueValues[Math.ceil(length/2)],uniqueValues[Math.ceil(length*3/4)],uniqueValues[length-1]];
+            return ticks;
+        },
+        _showRelativeRisk: function(analysisFinished,quantitive) {
+           return (analysisFinished & !quantitive);
+        },
+        _computeRelativeRisk: function(risk,mean) {
+           return Math.round(risk/mean*100)/100;
+        },
+        _onRenderChart: function(e) {
+          if (!this.analysis || !this.analysis.data) {
+              return;
+          }
+          this.debounce('highlight',()=> {
+            const layout = this.$.riskChart._chart.getChartLayoutInterface();
+            let chartArea = layout.getChartAreaBoundingBox();
+            let x = layout.getXLocation(this.analysis.data.risk);
+            let y = layout.getYLocation(this.analysis.data.risk);
+            // can only be used in shadyDOM not in full shadowDom
+            let recs = this.$.riskChart.querySelectorAll('g > rect[fill-opacity="0.6');
+            for (let i=1;i<recs.length;i++) {
+                let rec = recs[i];
+                let recX = parseInt(rec.x.baseVal.value);
+                if (recX >= x || (x <= 0) || (i === (recs.length-1))) {
+                    rec = recs[i-1];
+                    rec.setAttribute('fill','#D50000');
+                    rec.setAttribute('fill-opacity','1.0');
+                    this.$.riskLabel.style.left = rec.x.baseVal.value-4+'px';
+                    this.$.riskLabel.style.top = (172 - rec.height.baseVal.value) +'px';
+                    return;
+                }
+            }
+          });
+        },
+        _onIronResize: function() {
+            this.debounce('redraw', function () {
+                this.$.riskChart.redraw();
+                console.log('redraw');
+            });
+        }
+      });
+    })();
+  </script>
+</dom-module>
