@@ -30,10 +30,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="thg-imputation.html">
 <link rel="import" href="thg-ancestry.html">
 <link rel="import" href="thg-predictions.html">
+<link rel="import" href="shared-styles.html">
 
 <dom-module id="thg-app">
   <template>
-    <style>
+    <style include="shared-styles">
       :host {
         --app-primary-color: var(--paper-blue-500);
         --app-secondary-color: black;
@@ -169,7 +170,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         },
 
         listeners: {
-          'display-error':"onDisplayToastMessage",  
+          'display-error':"onDisplayToastMessage",
         },
 
         _pageChanged: function(page) {
@@ -205,10 +206,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         },
         displayError: function(msg) {
           this.$.toast.text = msg;
-          this.$.toast.show();  
+          this.$.toast.show();
         },
         onDisplayToastMessage: function(e) {
-           this.displayError(e.detail.text);  
+           this.displayError(e.detail.text);
         }
       });
     })();

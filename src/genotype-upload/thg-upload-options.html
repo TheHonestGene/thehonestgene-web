@@ -20,14 +20,17 @@
         }
 
         .options {
-            @apply(--layout-horizontal);
-            @apply(--layout-around-justified);
-            @apply(--layout-center);
             @apply(--layout-flex);
+            @apply(--layout-vertical);
+            @apply(--layout-center-justified);
+            @apply(--layout-center-center);
+            min-height:500px;
+         }
 
+        .container {
+            @apply(--layout-vertical);
+            @apply(--layout-flex);
         }
-
-        .container {}
 
         .upload_icon {
             width: 120px;
@@ -36,36 +39,43 @@
 
         .card {
             width: 250px;
-            height: 250px;
+            min-height: 250px;
             @apply(--layout-center-center);
             @apply(--layout-vertical);
         }
 
-        @media (max-width: 600px) {
+        @media (min-width: 600px) {
+            .options {
+                @apply(--layout-horizontal);
+                @apply(--layout-around-justified);
+                @apply(--layout-center);
+                @apply(--layout-flex);
+                min-height:250px;
+
+            }
+
             h1.paper-font-display1 {
                 font-size: 24px;
             }
-            .options {
-                @apply(--layout-flex);
-                @apply(--layout-vertical);
-                @apply(--layout-center-justified);
-            }
-            .container {}
+
+
         }
     </style>
     <template>
-        <thg-info-card title="1. Genetic data" id="infocard" image="/images/dna-icon.png">
-            <p class="info-content">In order to start an analysis, the user has to provide their genetic data. TheHonestGene currently supports this in two ways: (i) uploading the genetic data as a file or (i) transferring them automatically from one of the third-party companies where the user has an active account.</p>
-        </thg-info-card>
-        <section class="options">
-            <paper-material elevation="1" class="card" id="file" on-tap="_onTap">
-                <iron-icon class="upload_icon" icon="file-upload"></iron-icon>
-                <h2 class="paper-font-display1">UPLOAD</h2>
-            </paper-material>
-            <paper-material elevation="1" class="card" id="cloud" on-tap="_onTap">
-                <iron-icon class="upload_icon" icon="cloud-upload"></iron-icon>
-                <h2 class="paper-font-display1">CLOUD</h2>
-            </paper-material>
+        <section class="container">
+            <thg-info-card title="1. Genetic data" id="infocard" image="/images/dna-icon.png">
+                <p class="info-content">In order to start an analysis, the user has to provide their genetic data. TheHonestGene currently supports this in two ways: (i) uploading the genetic data as a file or (i) transferring them automatically from one of the third-party companies where the user has an active account.</p>
+            </thg-info-card>
+            <section class="options">
+                <paper-material elevation="1" class="card" id="file" on-tap="_onTap">
+                    <iron-icon class="upload_icon" icon="file-upload"></iron-icon>
+                    <h2 class="paper-font-display1">UPLOAD</h2>
+                </paper-material>
+                <paper-material elevation="1" class="card" id="cloud" on-tap="_onTap">
+                    <iron-icon class="upload_icon" icon="cloud-upload"></iron-icon>
+                    <h2 class="paper-font-display1">CLOUD</h2>
+                </paper-material>
+            </section>
         </section>
     </template>
     <script>

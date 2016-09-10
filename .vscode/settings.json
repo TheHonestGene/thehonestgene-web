@@ -1,0 +1,12 @@
+// Place your settings in this file to overwrite default and user settings.
+{
+    "eslint.options": {
+        "extensions": [".js", ".html"]
+    },
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/bower_components": true,
+        "build/**":true
+
+    }
+}

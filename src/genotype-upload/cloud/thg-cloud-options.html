@@ -13,6 +13,8 @@
 <dom-module id="thg-cloud-options">
     <style include="shared-styles">
         :host {
+          @apply(--layout-vertical);
+          @apply(--layout-flex);
         }
 
 
@@ -21,6 +23,7 @@
             @apply(--layout-around-justified);
             @apply(--layout-horizontal);
             @apply(--layout-wrap);
+            @apply(--layout-flex);
         }
 
         thg-cloud-provider {

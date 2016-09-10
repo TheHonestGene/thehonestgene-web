@@ -9,38 +9,7 @@
         color:black;
       }
 
-      .infocard .step img {
-          width:50px;
-          height:50px;
-      }
 
-      .infocard {
-         @apply(--layout-vertical)
-         padding:20px;
-      }
-      .infocard .top {
-        @apply(--layout-horizontal)
-      }
-      .infocard .step {
-         padding:8px;
-         text-align:center;
-      }
-
-      .infocard .description {
-          @apply(--layout-flex);
-          @apply(--layout-vertical);
-          @apply(--layout-center-justified);
-          padding:5px;
-       }
-       .infocard .description h2 {
-          margin: 5px;
-          text-align:start;
-          @apply(--paper-font-headline);
-       }
-       .infocard .description p {
-          margin: 5px;
-          @apply(--paper-font-body1);
-       }
        .infocard .info-controls {
           border-top: 1px solid #e8e8e8;
           padding:5px;
@@ -55,17 +24,6 @@
                background:#ffffff;
            }
        }
-
-      @media (min-width: 600px) {
-        .infocard .step img {
-          width:inherit;
-          height:inherit;
-        }
-        .infocard .step {
-           padding:20px;
-           text-align:center;
-        }
-      }
-    </style>
+     </style>
   </template>
 </dom-module>

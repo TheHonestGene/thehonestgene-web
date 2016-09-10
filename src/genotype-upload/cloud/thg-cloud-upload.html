@@ -49,14 +49,15 @@
             margin: 10px;
         }
         neon-animated-pages {
-
+            @apply(--layout-vertical);
+            @apply(--layout-flex);
         }
     </style>
     <template>
-        <thg-cloud-options cloud-data-route="list" id="list" class="cloudpage" on-close-options="_onCloseOptions" on-select-provider="_onSelectProvider" providers="[[providers]]"></thg-cloud-options>
-        <!--<neon-animated-pages selected="[[cloudpage]]" attr-for-selected="cloud-data-route">
+        <neon-animated-pages selected="[[cloudpage]]" attr-for-selected="cloud-data-route">
+            <thg-cloud-options cloud-data-route="list" id="list" class="cloudpage" on-close-options="_onCloseOptions" on-select-provider="_onSelectProvider" providers="[[providers]]"></thg-cloud-options>
             <thg-cloud-detail class="cloudpage" cloud-data-route="detail" id="detail" provider="[[selectedProvider]]" on-close-detail="_onCloseDetail" on-select-genotype="_onSelectGenotype" genotypes="[[currentGenotypes]]"></thg-cloud-detail>
-        </neon-animated-pages>-->
+        </neon-animated-pages>
     </template>
     <script>
         (function() {

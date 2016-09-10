@@ -3,12 +3,13 @@
 <link rel="import" href="../../../bower_components/iron-flex-layout/iron-flex-layout.html">
 <link rel="import" href="../../../bower_components/paper-material/paper-material.html">
 <link rel="import" href="../../polymer-redux-store.html">
-<!--<link rel="import" href="thg-cloud-genotype-card.html">-->
+<link rel="import" href="../../thg-info-card.html">
+<link rel="import" href="thg-cloud-genotype-card.html">
 
 
 
 <dom-module id="thg-cloud-detail">
-    <style include="">
+    <style include="shared-styles">
         :host {
             @apply(--layout-layout);
             @apply(--layout-vertical);
@@ -43,21 +44,15 @@
     </style>
     <template>
         <section class="cloudpage"  id="detail">
-            <paper-material elevation="1" class="infocard" id="infocard">
-                <div class="step">
-                    <img src="{{provider.logoUrl}}">
+            <thg-info-card image="{{provider.logoUrl}}" title="{{provider.title}}" id="infocard" class="infocard">
+                <p class="info-content">
+                    {{provider.description}}
+                </p>
+                <div class="info-controls">
+                    <paper-button on-tap="_closeDetailView">
+                        <iron-icon class="big" icon="arrow-back"></iron-icon> Back</paper-button>
                 </div>
-                <div class="description">
-                    <h2>{{provider.title}}</h2>
-                    <p>
-                        {{provider.description}}
-                    </p>
-                    <div class="controls">
-                        <paper-button on-tap="_closeDetailView">
-                            <iron-icon class="big" icon="arrow-back"></iron-icon> Back</paper-button>
-                    </div>
-                </div>
-            </paper-material>
+            </thg-info-card>
             <section class="detail" id="detail_contethg-cloud-detail.htmlnt" >
                 <template is="dom-repeat" items="{{genotypes.profiles}}" on-dom-change="_genotypesRendered">
                     <thg-cloud-genotype-card class="genotype" data="{{item}}" on-select="_selectGenotype"></thg-cloud-genotype-card>
@@ -70,7 +65,7 @@
       'use strict';
 
       Polymer({
-        is: 'hg-cloud-detail',
+        is: 'thg-cloud-detail',
 
         behaviors: [
           ReduxBehavior,
