@@ -146,6 +146,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 </dom-module>
 <script>
 (function() {
+  /* global moment */
+
   Polymer({
     is: 'thg-analysis-card',
     behaviors: [
@@ -175,10 +177,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     this.playAnimation();
   },
   _onNeonAnimationFinish: function() {
-    console.log('animation done!');
+
   },
   _computeAvatar: function(gender) {
-      let avatar = 'avatar_generic.png';
+      var avatar = 'avatar_generic.png';
       if (gender === 'm') {
           avatar = 'avatar_male.png';
       }
@@ -186,12 +188,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           avatar = 'avatar_female.png';
       }
       return avatar;
-  },
+    },
     _computeDaysPassed: function(date) {
         return moment(date).fromNow();
-    },
-    _displayDate: function(date) {
-       return "19.02.2016";
     },
     _clickView: function() {
         this.fire('view-analysis',this.data.id);

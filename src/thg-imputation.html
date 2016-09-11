@@ -11,7 +11,7 @@
 <dom-module id="thg-imputation" >
   <style include="shared-styles">
     :host {
-        
+
     }
 
     * {
@@ -342,7 +342,7 @@
          this.fire('display-toast',{'text':'Stopping imputation...'});
        }
      },
-     _onStartBtnClick: function(e) {
+     _onStartBtnClick: function() {
         ga('send', 'event', 'Imputation', 'start');
         this.dispatch({type:'RUN_ANALYSIS',analysisType:'imputation'})
      },

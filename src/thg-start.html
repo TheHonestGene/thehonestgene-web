@@ -306,7 +306,7 @@
                ga('send', 'event', 'Consent', 'declined');
             }
         },
-        _handleGenerateIdResponse: function(e) {
+        _handleGenerateIdResponse: function() {
             let id = this.$.idRequester.lastResponse.id;
             this.dispatch('createNewAnalysis',id);
             this.animationConfig.exit[0].name = 'scale-down-animation';
@@ -369,7 +369,7 @@
         _getNodesForCascade: function() {
             var nodesToScale = [];
             var cards = Polymer.dom(this.root).querySelectorAll('hg-analysis-card');
-            for (var node, index = 0; node = cards[index]; index++) {
+            for (let node of cards) {
                 nodesToScale.push(node);
             }
             return nodesToScale;

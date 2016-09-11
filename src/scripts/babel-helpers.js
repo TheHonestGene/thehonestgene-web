@@ -1,3 +1,5 @@
+/* global Symbol, Promise, global */
+/*eslint no-unsafe-finally: "off"*/
 (function (global) {
   var babelHelpers = global.babelHelpers = {};
   babelHelpers.typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {

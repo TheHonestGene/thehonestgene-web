@@ -10,7 +10,7 @@
 <dom-module id="thg-ancestry">
     <style include="shared-styles">
         :host {
-            @apply(--layout-vertical); 
+            @apply(--layout-vertical);
         }
         google-chart {
             width:100%;
@@ -61,25 +61,25 @@
   <script>
     (function() {
       'use strict';
-      
-      
+
+
       var emptyDataSource = [['PC1','East Asian','African','Admixed American']];
       for (let i=0;i<200;i++) {
           emptyDataSource.push([Math.random(),Math.random(),Math.random(),Math.random()]);
       }
-      
+
       var defaultOptions = {
-          title: "What is your genetic ancestry?", 
-          dataOpacity:0.5, 
+          title: "What is your genetic ancestry?",
+          dataOpacity:0.5,
           hAxis: {
               gridlines:{
                   count:0
-                }, 
+                },
                 title: "PC1",
                 titleTextStyle: {
                   color: 'black'
                  },
-                
+
           },
           vAxis: {
               gridlines:{
@@ -94,7 +94,7 @@
           pointSize:3,
           series:{
               5:{
-                  color:"black", 
+                  color:"black",
                   pointShape:"star",
                   pointSize:20,
                   dataOpacity:1.0
@@ -104,9 +104,9 @@
                 duration:1000,
                 easing: 'inAndOut',
                 //startup: true,
-            }, 
+            },
         };
-        
+
         const popMap = {
             EUR: {name: 'European',color:'#3366cc'},
             EAS: {name: 'East Asian',color:'#dc3912'},
@@ -115,19 +115,19 @@
             SAS: {name: 'South Asian',color:'#ff9900'},
             YOU: {name: "That's you",color:'black'},
         };
-        
-     
+
+
         var emptyOptions = Object.assign({},defaultOptions);
         emptyOptions.colors = ['#ccc','#ccc','#ccc'];
         emptyOptions.title='Analysis is running...';
         emptyOptions.vAxis.titleTextStyle.color='#ccc';
         emptyOptions.hAxis.titleTextStyle.color='#ccc';
         delete emptyOptions.animation;
-      
+
       Polymer({
         is: 'thg-ancestry',
         behaviors: [Polymer.NeonAnimatableBehavior, Polymer.IronResizableBehavior,ReduxBehavior ],
-        
+
         properties: {
             animationConfig: {
                 value: function() {
@@ -152,7 +152,7 @@
                     }],
                 };
             },
-          }, 
+          },
           data: {
               type:Object,
               statePath: function(state){ return state.id in state.analyses ? state.analyses[state.id].ancestryStep.data:null}
@@ -186,7 +186,7 @@
               type:Object,
               value: function() { return emptyDataSource;},
           },
-          
+
         },
         observers:[
            '_fetchDataForPcs(genotypeData,data)'
@@ -197,7 +197,7 @@
         },
          _isFinished: function(state) {
            return state === 'FINISHED';
-        }, 
+        },
         _isRunning: function(state) {
           return state === 'RUNNING';
         },
@@ -209,7 +209,7 @@
         },
         actions: {
             changePage: function(page) {
-                return { 
+                return {
                     type: 'CHANGE_UPLOAD_PAGE',
                     page:page
                 };
@@ -229,7 +229,7 @@
                   this.fire('display-toast',{'text':'Stopping ancestry...'});
               }
            },
-           _onStartBtnClick: function(e) {
+           _onStartBtnClick: function() {
               ga('send', 'event', 'Ancestry', 'start');
               this.dispatch({type:'RUN_ANALYSIS',analysisType:'ancestry'})
            },
@@ -268,12 +268,12 @@
                }
           },
           _fetchDataForPcs: function(genotypeData,data) {
-              this.debounce('plotpcs', ()=> { 
+              this.debounce('plotpcs', ()=> {
                 if (data && data.pc1 && data.pc2 && genotypeData) {
                     const pc1 = data.pc1;
                     const pc2 = data.pc2;
                     let platform = genotypeData.source;
-                    if (genotypeData.version && genotypeData.version !== '') { 
+                    if (genotypeData.version && genotypeData.version !== '') {
                         platform += '_'+genotypeData.version;
                     }
                     loadPcsData(platform,pc1,pc2).then((data) =>{
@@ -285,7 +285,7 @@
                 }
               });
             }
-          
+
       });
     })();
   </script>

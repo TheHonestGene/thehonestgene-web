@@ -1,4 +1,4 @@
-/*global  Stomp, SockJS */
+/*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
 import { takeEvery } from 'redux-saga';
 import { effects } from 'redux-saga';
 const put = effects.put;

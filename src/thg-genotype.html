@@ -115,7 +115,7 @@
             var dataForAnnotationsDict = {};
             var dataForHetereo = [['Type','# of SNPs'],['Heterozygous',0],['Homozygous',0]];
             var dataForHetereoPerChr = [['Chr','Heterozygous','Homozygous']];
-            for (var i=0;i< annotations.length;i++) {
+            for (let i=0;i< annotations.length;i++) {
                dataForAnnotationsDict[annotations[i]] = 0;
             }
             var dataForAnnotationsPerChr = [['Chr']];
@@ -128,7 +128,7 @@
                 var annotationData = [chr]
                 var hetereoCount = 0;
                 var homoCount = 0;
-                for (var i=0;i< annotations.length;i++ ) {
+                for (let i=0;i< annotations.length;i++ ) {
                     var annot = annotations[i];
                     var annotationCount = chr_data.annotations[annot];
                     if (annotationCount === undefined) {
@@ -152,7 +152,7 @@
             this.dataForNumberOfSNPS = dataForNumberOfSNPS;
             this.dataForHetereoPerChr = dataForHetereoPerChr;
             this.dataForHetereo = dataForHetereo;
-            for (var annot in dataForAnnotationsDict) {
+            for (let annot in dataForAnnotationsDict) {
                 dataForAnnotations.push([annot,dataForAnnotationsDict[annot]]);
             }
             this.dataForAnnotations = dataForAnnotations;
@@ -167,7 +167,7 @@
           return annot === 'AA' || annot === 'GG' || annot==='CC' || annot === 'TT';
         },
         _onCardClick: function(event) {
-           var page = event.detail;
+           let page = event.detail;
            if (typeof page === 'object') {
                page = "list";
            }
@@ -178,14 +178,14 @@
             this.animationConfig.entry[0] =  {animatable: subPage, type: 'entry'};
             this.animationConfig.exit[0] =  {animatable: subPage, type: 'exit'};*/
         },
-      onEntryStart: function(e) {
+      onEntryStart: function() {
 
       },
-      onEntryFinish: function(e) {
+      onEntryFinish: function() {
       },
-      onExitStart: function(e) {
+      onExitStart: function() {
       },
-      onExitFinish: function(e) {
+      onExitFinish: function() {
       }
       });
     })();

@@ -124,7 +124,6 @@ Under normal circumstances, each individual bears two non-identical copies of ea
     <script>
         (function() {
 
-    var slices = {}
     var emptyChartOptionsForNumberOfSNPs = {
         title: 'Analyzing genotype...',
         legend:'none',
@@ -184,12 +183,12 @@ Under normal circumstances, each individual bears two non-identical copies of ea
     var emptyDataForHetereo = [['Type', '# of SNPs'],['heterozygous',0.5],['homozygous',0.5]];
 
     var emptyChartDataForNumberOfSNPs = [['Chr','number of SNPs']];
-    for (var i=0;i<23;i++) {
+    for (let i=0;i<23;i++) {
         emptyChartDataForNumberOfSNPs.push(['Chr'+(i+1),50]);
     }
 
     var emptyChartDataForHeteroPerChr = [['Chr','# of SNPs']]
-    for (var i=0;i<23;i++) {
+    for (let i=0;i<23;i++) {
         emptyChartDataForHeteroPerChr.push(['Chr'+(i+1),10000]);
     }
 
