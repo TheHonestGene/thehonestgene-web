@@ -42,21 +42,21 @@ export function transferGenotypeFromProvider(id, provider, genotypeId, accessTok
 }
 
 export function startImputation(id) {
-  return fetch(`/api/imputation?id=${id}`,
+  return fetch(`/api/imputation/${id}`,
     {method: 'POST'})
     .then(checkStatus)
     .then(parseJSON);
 }
 
 export function startAncestry(id) {
-  return fetch(`/api/ancestry?id=${id}`,
+  return fetch(`/api/ancestry/${id}`,
     {method: 'POST'})
     .then(checkStatus)
     .then(parseJSON);
 }
 
 export function startRiskprediction(id) {
-  return fetch(`/api/riskprediction?id=${id}`,
+  return fetch(`/api/riskprediction/${id}`,
     {method: 'POST'})
     .then(checkStatus)
     .then(parseJSON);
@@ -68,20 +68,20 @@ export function loadPcsData(platform,pc1,pc2) {
     .then(parseJSON);
 }
 
-export function loadImputationData(taskid) {
-  return fetch(`/api/imputation?task_id=${taskid}&wait=1`, {headers: headers})
+export function loadImputationData(id,taskid) {
+  return fetch(`/api/imputation/${id}/state/${taskid}?wait=1`, {headers: headers})
     .then(checkStatus)
     .then(parseJSON);
 }
 
-export function loadRiskData(taskid) {
-  return fetch(`/api/riskprediction?task_id=${taskid}&wait=1`, {headers: headers})
+export function loadRiskData(id,taskid) {
+  return fetch(`/api/riskprediction/${id}/state/${taskid}?wait=1`, {headers: headers})
     .then(checkStatus)
     .then(parseJSON);
 }
 
-export function loadAncestryData(taskid) {
-  return fetch(`/api/ancestry?task_id=${taskid}&wait=1`, {headers: headers})
+export function loadAncestryData(id,taskid) {
+  return fetch(`/api/ancestry/${id}/state/${taskid}?wait=1`, {headers: headers})
     .then(checkStatus)
     .then(parseJSON);
 }
@@ -106,10 +106,10 @@ export function loadAvailableTraits() {
   return fetch('/api/traits', {headers: headers}).then(checkStatus).then(parseJSON);
 }
 
-export function doCancelAnalysis(analysisType, taskids) {
+export function doCancelAnalysis(id,analysisType, taskids) {
   let promises = [];
   for (let taskid of taskids) {
-    promises.push(fetch(`/api/${analysisType}/cancel/${taskid}`, {method: 'POST'})
+    promises.push(fetch(`/api/${analysisType}/${id}/cancel/${taskid}`, {method: 'POST'})
     .then(checkStatus)
     .then(parseJSON));
   }

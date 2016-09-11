@@ -139,7 +139,7 @@ function* startRetrieveAnalysisData(analysisType, body, id) {
   }
   if (loadDataFunc !== null) {
     try {
-      const response = yield call(loadDataFunc, taskId);
+      const response = yield call(loadDataFunc, id, taskId);
       if (response.state != 'SUCCESS') {
         throw new Error(analysisType + ' failed');
       }
@@ -216,7 +216,7 @@ function* cancelAnalysis(action) {
     else {
       taskIds.push(taskid);
     }
-    const response = yield call(Api.doCancelAnalysis, action.analysisType,taskIds);
+    const response = yield call(Api.doCancelAnalysis,action.id, action.analysisType,taskIds);
     yield put(analysisCanceled(action.id,action.analysisType,action.traits));
 
   } catch (error) {
