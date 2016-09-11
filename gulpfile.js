@@ -18,6 +18,9 @@ const babel = require('rollup-plugin-babel');
 const nodeResolve = require('rollup-plugin-node-resolve');
 const commonjs = require('rollup-plugin-commonjs');
 const nodeGlobals = require('rollup-plugin-node-globals');
+//required for middleware rerror of too many regisered listeners
+require('events').EventEmitter.prototype._maxListeners = -1;
+
 
 // Got problems? Try logging 'em
 //const logging = require('plylog');
@@ -47,7 +50,7 @@ global.config = {
   }
 };
 
-gulp.task('script', function () {
+function processRollup(isProd) {
   return rollup.rollup({
     entry: 'scripts/thg.js',
     plugins: [
@@ -69,10 +72,12 @@ gulp.task('script', function () {
       format: 'iife',
       moduleName: 'THG',
       moduleId: 'THG',
-      dest: 'src/scripts/thg.js'
+      dest: 'build/unbundled/scripts/thg.js'
     });
   });
-});
+}
+
+gulp.task('script',processRollup);
 
 // Add your own custom gulp tasks to the gulp-tasks directory
 // A few sample tasks are provided for you
@@ -111,8 +116,8 @@ function dependencies() {
 // and process them, and output bundled and unbundled versions of the project
 // with their own service workers
 gulp.task('default', gulp.series([
-  'script',
   clean.build,
+  'script',
   project.merge(source, dependencies),
   project.serviceWorker
 ]));
@@ -120,13 +125,13 @@ gulp.task('default', gulp.series([
 // Create a build for development
 
 function onlyUnbundled(done) {
-  config.build.bundleType = 'unbundled';
+  global.config.build.bundleType = 'unbundled';
   done()
 }
 gulp.task('dev',gulp.series(
-      'script',
       onlyUnbundled,
       clean.build,
+      'script',
       project.merge(source, dependencies)
   ));
 
@@ -134,11 +139,7 @@ gulp.task('dev',gulp.series(
 // Start development server
 const proxyMiddleware = require('http-proxy-middleware');
 const browserSync = require('browser-sync').create();
-function reload() {
-  //browserSync.reload();
-  //done();
-  console.log('reload');
- }
+
 
 
 /**
@@ -184,13 +185,14 @@ gulp.task('serve', gulp.series('dev', function() {
       baseDir: ['build/unbundled'],
       middleware: [proxy],
     },
-    open: false
+    open: false,
   });
 
 
 
-  const watcher = gulp.watch(['src/**/*.html','series/**/*.js','images/**/*']);
-  //watcher.on('all',gulp.series(['dev',reload]));
-  //gulp.watch(['scripts/**/*.js'], gulp.series('dev', reload));
+  const watcher = gulp.watch(['src/**/*.html','images/**/*']);
+  watcher.on('all',gulp.series(['dev']));
+  const jsWatcher = gulp.watch(['scripts/**/*.js']);
+  jsWatcher.on('change',gulp.series(['script']));
   //gulp.watch(['images/**/*'], gulp.series('dev',reload));
 }));
