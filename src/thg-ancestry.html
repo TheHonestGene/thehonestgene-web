@@ -269,16 +269,17 @@
           },
           _fetchDataForPcs: function(genotypeData,data) {
               this.debounce('plotpcs', ()=> {
-                if (data && data.pc1 && data.pc2 && genotypeData) {
+                if (data && genotypeData) {
                     const pc1 = data.pc1;
                     const pc2 = data.pc2;
                     let platform = genotypeData.source;
                     if (genotypeData.version && genotypeData.version !== '') {
                         platform += '_'+genotypeData.version;
                     }
-                    loadPcsData(platform,pc1,pc2).then((data) =>{
+                    // TODO needs to be properly implemented
+                    /*loadPcsData(platform,pc1,pc2).then((data) =>{
                         this.datasource = data;
-                    });
+                    });*/
                 }
                 else {
                     this.datasource = emptyDataSource;

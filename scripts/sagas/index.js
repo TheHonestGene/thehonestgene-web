@@ -1,15 +1,16 @@
 /*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
-import { takeEvery } from 'redux-saga';
-import { effects } from 'redux-saga';
+import { takeEvery, buffers, effects } from 'redux-saga';
+import {eventChannel, END} from 'redux-saga';
+
 const put = effects.put;
 const call = effects.call;
 const take = effects.take;
 const fork = effects.fork;
 const select = effects.select;
 const apply = effects.apply;
+const cancelled = effects.cancelled;
 
-//import { call, put, take, fork, select, apply } from 'redux-saga/effects';
-import createChannel from './channel';
+
 import * as Api from '../api';
 import {getAccessToken, getGenotypeId, getTaskId} from '../reducers/selectors';
 import {
@@ -21,11 +22,27 @@ import {
   analysisCanceled,displayCloudGenotypes,
   loadAnalysisDataFailed,startAnalysis,
   displayAnalysisData,subscribeToUpdatesFailed,
+  displayPcsData,
   messageReceived,analysisFinished
 } from '../actions';
 
+let client;
+let channel;
 
-var subscription;
+function createStompSocket() {
+   return new Promise(function(resolve, reject) {
+      client = Stomp.over(new SockJS('/stomp'));
+      client.heartbeat.outgoing = 0;
+      client.heartbeat.incoming = 0;
+      client.connect('guest', 'guest',
+        function() {
+          resolve();
+      },
+      function() {
+          reject(new Error('could not connect'));
+      }, '/');
+   });
+}
 
 const wrapper = {
   client: null,
@@ -84,7 +101,7 @@ function* watchUploadGenotype() {
 
 function* monitorStompEvents(channel) {
   while (true) {
-    const message = yield call(channel.take);
+    const message = yield take(channel);
     var body = JSON.parse(message.body);
     switch (body.state) {
       case 'FINISHED':
@@ -103,13 +120,14 @@ function* watchWebSocket() {
   while (true) {
     const action = yield take(['LOAD_ANALYSIS']);
     try {
-      if (subscription) {
-        subscription.subscription.unsubscribe();
+      if (channel) {
+        channel.close();
+        channel = null;
       }
-      yield apply(wrapper, wrapper.connect);
-      subscription = wrapper.subscribe(action.id);
-      if (subscription) {
-        yield fork(monitorStompEvents, createStompChannel(subscription));
+      const socket = yield call(createStompSocket,'/stomp');
+      channel = yield call(createStompChannel, socket, action.id)
+      if (channel) {
+        yield fork(monitorStompEvents, channel);
       }
       else {
         throw Error('could not subscribe to updates');
@@ -272,11 +290,20 @@ function* watchLoadAvailableTraits() {
   yield put(saveAvailableTraits(response));
 }
 
-function createStompChannel(subscription) {
-  const channel = createChannel();
-  // every change event will call put on the channel
-  subscription.on(channel.put);
-  return channel;
+function createStompChannel(socket,id) {
+  return eventChannel(emit => {
+     const stompHandler = (event) => {
+       emit(event);
+     }
+     const headers = {id: id,durable: false,'auto-delete': true, exclusive: true,'x-expires': 86400000};
+     const dest = '/queue/updates_' + id;
+     const subscription = client.subscribe(dest, stompHandler, headers);
+     const unsubscribe = () => {
+       subscription.unsubscribe();
+     }
+     return unsubscribe;
+
+  },buffers.fixed());
 }
 
 
